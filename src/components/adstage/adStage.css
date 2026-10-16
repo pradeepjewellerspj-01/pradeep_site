@@ -1,0 +1,835 @@
+/*
+ * Showroom-TV commercial (AdStage.jsx, /screen). Loaded only with that lazy
+ * chunk, so the website never downloads it.
+ *
+ * Sizes are relative to the box they sit in, like container units, but
+ * written as calc(N * var(--cw)) / calc(N * var(--ch)): 1% of the box's width
+ * / height, set in pixels by AdStage.jsx on the stage and on the reel. This
+ * works on Android TV WebViews older than container queries (Chrome 105), so
+ * one composition fills a preview box, a 720p TV, 4K or ultrawide.
+ */
+/* Until AdStage.jsx measures the boxes: the viewport. */
+.ad-stage {
+  --cw: 1vw;
+  --ch: 1vh;
+}
+.ad-reel {
+  --cw: 0.73vw;
+}
+/* Safe-area padding, per box (custom properties resolve where they are declared). */
+.ad-stage,
+.ad-reel {
+  --ad-pad-x: max(24px, calc(5.2 * var(--cw)));
+  --ad-pad-y: max(20px, calc(6 * var(--ch)));
+}
+.ad-stage {
+  --ad-ink: #0a0706;
+  --ad-gold: #d9b47a;
+  --ad-gold-soft: #c8a56a;
+  --ad-champagne: #ecd9b8;
+  --ad-ivory: #f6efe3;
+  --ad-muted: rgba(246, 239, 227, 0.68);
+  --ad-line: rgba(217, 180, 122, 0.38);
+  --ad-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ad-display: 'Cormorant Garamond', 'Fraunces', serif;
+  --ad-serif: 'Fraunces', 'Times New Roman', serif;
+  --ad-sans: 'IBM Plex Sans', system-ui, sans-serif;
+
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--ad-ink);
+  color: var(--ad-ivory);
+  outline: none;
+  cursor: none; /* a TV: the cursor appears only while the mouse moves */
+}
+.ad-stage.is-active {
+  cursor: default;
+}
+/* On /screen the stage is pinned to the window itself: exact on every engine,
+   where 100vh can come out shorter than the window (older Android TV WebViews). */
+.ad-stage:not(.ad-stage--preview) {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: auto;
+  height: auto;
+}
+.ad-stage--preview {
+  width: 100%;
+  height: 100%;
+  cursor: default;
+}
+/* Reel (advertisements) | price list. The list never moves. */
+.ad-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(280px, 27%, 1000px);
+}
+.ad-reel {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* ---------- Layers & crossfade ---------- */
+.ad-layer {
+  position: absolute;
+  inset: 0;
+}
+.ad-layer.is-current {
+  z-index: 2;
+  animation: ad-in 1.4s var(--ad-ease) both;
+}
+.ad-layer.is-leaving {
+  z-index: 1;
+  pointer-events: none;
+}
+.ad-layer.is-leaving .ad-safe {
+  animation: ad-out 0.7s ease both;
+}
+@keyframes ad-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes ad-out {
+  to {
+    opacity: 0;
+    transform: translateY(calc(-1.2 * var(--ch)));
+  }
+}
+
+/* ---------- Media ---------- */
+.ad-media {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 70% 40%, #2a1c12 0%, #120c09 55%, var(--ad-ink) 100%);
+}
+.ad-media--plain::after {
+  /* the brand stage: a soft pool of warm light */
+  content: '';
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(40% 45% at 50% 46%, rgba(217, 180, 122, 0.17), transparent 70%);
+}
+.ad-media-fill {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ad-media img {
+  transition: opacity 0.8s ease;
+}
+.ad-media.is-loading img {
+  opacity: 0;
+}
+/* Portrait photographs: framed on the right, over a blurred, darkened copy of themselves. */
+.ad-media-backdrop {
+  filter: blur(40px) brightness(0.42) saturate(1.1);
+  transform: scale(1.15);
+}
+.ad-media-frame {
+  position: absolute;
+  /* between the top bar and the rate strip */
+  --frame-top: calc(var(--ad-pad-y) + max(40px, calc(7 * var(--ch))) + calc(2 * var(--ch)));
+  --frame-bottom: var(--ad-pad-y);
+  top: var(--frame-top);
+  right: calc(8 * var(--cw));
+  height: calc(calc(100 * var(--ch)) - var(--frame-top) - var(--frame-bottom));
+  width: auto;
+  max-width: calc(44 * var(--cw));
+  object-fit: cover;
+  box-shadow: 0 calc(4 * var(--ch)) calc(10 * var(--ch)) calc(-3 * var(--ch)) rgba(0, 0, 0, 0.65);
+  outline: 1px solid rgba(217, 180, 122, 0.28);
+  outline-offset: calc(1.2 * var(--ch));
+}
+.ad-kb {
+  animation: ad-kenburns 22s ease-in-out infinite alternate;
+  transform-origin: 62% 46%;
+}
+.ad-media-frame.ad-kb {
+  animation-name: ad-drift;
+}
+@keyframes ad-kenburns {
+  to {
+    transform: scale(1.09) translate(-1.2%, -0.8%);
+  }
+}
+@keyframes ad-drift {
+  to {
+    transform: translateY(calc(-1.2 * var(--ch)));
+  }
+}
+.ad-stage.is-paused .ad-kb,
+.ad-stage.is-paused .ad-line-fill,
+.ad-stage.is-paused .ad-particles span,
+.ad-stage.is-paused .ad-sheen {
+  animation-play-state: paused;
+}
+
+/* Legibility: dark behind the words, the top bar and the rate strip; the jewellery left clear. */
+.ad-shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(10, 7, 6, 0.9) 0%, rgba(10, 7, 6, 0.58) 34%, rgba(10, 7, 6, 0.08) 62%, rgba(10, 7, 6, 0) 100%),
+    linear-gradient(0deg, rgba(10, 7, 6, 0.85) 0%, rgba(10, 7, 6, 0) 38%), linear-gradient(180deg, rgba(10, 7, 6, 0.6) 0%, rgba(10, 7, 6, 0) 20%);
+}
+.ad-layer--brand .ad-shade {
+  background: radial-gradient(80% 80% at 50% 50%, rgba(10, 7, 6, 0.5), rgba(10, 7, 6, 0.9));
+}
+.ad-layer--rates .ad-shade {
+  background: linear-gradient(90deg, rgba(10, 7, 6, 0.93) 0%, rgba(10, 7, 6, 0.8) 45%, rgba(10, 7, 6, 0.9) 100%);
+}
+
+/* One slow pass of light across the frame per advertisement. */
+.ad-sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 38%, rgba(255, 228, 180, 0.07) 48%, rgba(255, 240, 210, 0.12) 50%, rgba(255, 228, 180, 0.07) 52%, transparent 62%);
+  background-size: 260% 100%;
+  background-position: 140% 0;
+  mix-blend-mode: screen;
+  animation: ad-sheen 5.5s 1.2s var(--ad-ease) both;
+}
+@keyframes ad-sheen {
+  to {
+    background-position: -40% 0;
+  }
+}
+
+/* A few drifting motes of gold dust. */
+.ad-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.ad-particles span {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--s);
+  height: var(--s);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 226, 170, 0.95), rgba(217, 180, 122, 0) 70%);
+  opacity: 0;
+  animation: ad-mote var(--d) var(--delay) linear infinite;
+}
+@keyframes ad-mote {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0);
+  }
+  20%,
+  70% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(calc(3 * var(--cw)), calc(-14 * var(--ch)), 0);
+  }
+}
+
+/* ---------- Safe area & words ---------- */
+.ad-safe {
+  position: absolute;
+  inset: calc(var(--ad-pad-y) + max(40px, calc(7 * var(--ch)))) var(--ad-pad-x) var(--ad-pad-y);
+  z-index: 4;
+  display: flex;
+  align-items: flex-end;
+}
+.ad-copy {
+  max-width: min(calc(52 * var(--cw)), 1300px);
+}
+.ad-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: calc(1.1 * var(--cw));
+  font-family: var(--ad-sans);
+  font-size: max(11px, min(calc(0.9 * var(--cw)), calc(1.7 * var(--ch))));
+  font-weight: 500;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--ad-gold);
+}
+.ad-eyebrow-rule {
+  width: calc(3.2 * var(--cw));
+  height: 1px;
+  background: currentColor;
+}
+.ad-title {
+  margin-top: calc(2.4 * var(--ch));
+  font-family: var(--ad-display);
+  font-weight: 400;
+  font-size: max(34px, min(calc(5.6 * var(--cw)), calc(11.5 * var(--ch))));
+  line-height: 1;
+  letter-spacing: -0.008em;
+  color: var(--ad-ivory);
+  text-wrap: balance;
+  text-shadow: 0 calc(0.4 * var(--ch)) calc(3 * var(--ch)) rgba(0, 0, 0, 0.35);
+}
+.ad-desc {
+  margin-top: calc(2.6 * var(--ch));
+  max-width: calc(40 * var(--cw));
+  font-family: var(--ad-sans);
+  font-weight: 300;
+  font-size: max(14px, min(calc(1.3 * var(--cw)), calc(2.6 * var(--ch))));
+  line-height: 1.55;
+  color: var(--ad-muted);
+}
+.ad-signoff {
+  display: flex;
+  align-items: center;
+  gap: calc(1 * var(--cw));
+  margin-top: calc(3.6 * var(--ch));
+  font-family: var(--ad-sans);
+  font-size: max(11px, min(calc(0.82 * var(--cw)), calc(1.6 * var(--ch))));
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--ad-champagne);
+}
+.ad-signoff-rule {
+  width: calc(1.6 * var(--cw));
+  height: 1px;
+  background: var(--ad-gold);
+}
+
+/* ---------- Brand card ---------- */
+.ad-layer--brand .ad-safe {
+  align-items: center;
+  justify-content: center;
+}
+.ad-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: calc(3.2 * var(--ch));
+}
+.ad-brand-rule {
+  width: calc(12 * var(--cw));
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--ad-gold), transparent);
+  transform-origin: center;
+}
+.ad-brand-tagline {
+  font-family: 'Noto Serif Devanagari', var(--ad-serif);
+  font-size: max(18px, min(calc(2 * var(--cw)), calc(4.2 * var(--ch))));
+  color: var(--ad-champagne);
+}
+.ad-brand-meta {
+  font-family: var(--ad-sans);
+  font-size: max(11px, min(calc(0.85 * var(--cw)), calc(1.7 * var(--ch))));
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--ad-muted);
+}
+.ad-brand-visit {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: calc(0.6 * var(--ch)) calc(2.4 * var(--cw));
+  font-family: var(--ad-sans);
+  font-size: max(12px, min(calc(0.95 * var(--cw)), calc(1.9 * var(--ch))));
+  letter-spacing: 0.06em;
+  color: var(--ad-ivory);
+}
+.ad-brand-visit span + span::before {
+  content: '·';
+  margin-right: calc(2.4 * var(--cw));
+  color: var(--ad-gold);
+}
+
+/* The letterhead lockup, in light colours for the dark screen. */
+.ad-lockup {
+  display: inline-flex;
+  align-items: center;
+}
+.ad-lockup-mark {
+  width: auto;
+  flex-shrink: 0;
+}
+.ad-lockup-words {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1;
+}
+.ad-lockup-hi {
+  font-family: 'Noto Serif Devanagari', var(--ad-serif);
+  font-weight: 700;
+  color: var(--ad-ivory);
+}
+.ad-lockup-en {
+  font-family: var(--ad-serif);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ad-gold);
+}
+.ad-lockup--hero {
+  gap: calc(1.8 * var(--cw));
+}
+.ad-lockup--hero .ad-lockup-mark {
+  height: min(calc(24 * var(--ch)), calc(13 * var(--cw)));
+  filter: drop-shadow(0 0 calc(3 * var(--ch)) rgba(217, 180, 122, 0.22));
+}
+.ad-lockup--hero .ad-lockup-hi {
+  font-size: min(calc(10 * var(--ch)), calc(5.4 * var(--cw)));
+}
+.ad-lockup--hero .ad-lockup-en {
+  margin-top: calc(0.8 * var(--ch));
+  font-size: min(calc(3.4 * var(--ch)), calc(1.8 * var(--cw)));
+}
+.ad-lockup--corner {
+  gap: max(8px, calc(0.6 * var(--cw)));
+}
+.ad-lockup--corner .ad-lockup-mark {
+  height: max(32px, min(calc(6 * var(--ch)), calc(3.2 * var(--cw))));
+}
+.ad-lockup--corner .ad-lockup-hi {
+  font-size: max(15px, min(calc(2.6 * var(--ch)), calc(1.4 * var(--cw))));
+}
+.ad-lockup--corner .ad-lockup-en {
+  margin-top: 2px;
+  font-size: max(8px, min(calc(0.95 * var(--ch)), calc(0.5 * var(--cw))));
+}
+.ad-logo-custom--hero {
+  max-height: calc(30 * var(--ch));
+  max-width: calc(40 * var(--cw));
+  object-fit: contain;
+}
+.ad-logo-custom--corner {
+  max-height: max(32px, calc(6 * var(--ch)));
+  max-width: calc(14 * var(--cw));
+  object-fit: contain;
+}
+
+/* ---------- Broadcast furniture ---------- */
+.ad-top {
+  position: absolute;
+  top: var(--ad-pad-y);
+  left: var(--ad-pad-x);
+  right: var(--ad-pad-x);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+.ad-corner {
+  transition: opacity 0.9s var(--ad-ease);
+}
+.ad-corner.is-off {
+  opacity: 0;
+}
+.ad-clock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: calc(0.4 * var(--ch));
+  font-family: var(--ad-sans);
+  font-size: max(10px, calc(1.25 * var(--ch)));
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ad-muted);
+}
+.ad-clock-time {
+  font-size: 1.5em;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  color: var(--ad-ivory);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Rate board (the rates advertisement) ---------- */
+.ad-ratesSlide {
+  display: grid;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  align-items: center;
+  gap: calc(6 * var(--cw));
+  align-self: center;
+}
+.ad-rates {
+  font-family: var(--ad-sans);
+  color: var(--ad-ivory);
+}
+.ad-rates--board {
+  padding: calc(5 * var(--ch)) calc(3 * var(--cw)) calc(4 * var(--ch));
+  border-top: 1px solid var(--ad-line);
+  border-bottom: 1px solid var(--ad-line);
+  background: linear-gradient(180deg, rgba(217, 180, 122, 0.06), rgba(217, 180, 122, 0));
+}
+.ad-rates-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: calc(1 * var(--cw));
+  font-size: max(10px, min(calc(0.7 * var(--cw)), calc(1.4 * var(--ch))));
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+}
+.ad-rates-tag {
+  color: var(--ad-gold);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.ad-rates-tag--stale,
+.ad-rates-tag--off {
+  color: #e8b06a;
+}
+.ad-rates-unit {
+  color: var(--ad-muted);
+}
+.ad-rates-list {
+  margin-top: calc(1.8 * var(--ch));
+}
+.ad-rates-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: calc(1.2 * var(--cw));
+  padding-block: calc(2.3 * var(--ch));
+  border-top: 1px solid rgba(246, 239, 227, 0.1);
+}
+.ad-rates-row:first-child {
+  border-top: 0;
+}
+.ad-rates-name {
+  font-size: max(13px, min(calc(1 * var(--cw)), calc(2.1 * var(--ch))));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ad-muted);
+  white-space: nowrap;
+}
+.ad-rates-fine {
+  margin-left: 0.3em;
+  color: rgba(246, 239, 227, 0.4);
+}
+.ad-rates-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: calc(0.8 * var(--cw));
+  /* Plex has even tabular figures; a serif "1" leaves gaps in the rolling digits. */
+  font-family: var(--ad-sans);
+  font-weight: 600;
+  font-size: max(28px, min(calc(2.9 * var(--cw)), calc(6.2 * var(--ch))));
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ad-ivory);
+  white-space: nowrap;
+}
+.ad-rates-change {
+  font-family: var(--ad-sans);
+  font-size: max(12px, min(calc(0.9 * var(--cw)), calc(1.9 * var(--ch))));
+}
+.ad-rates-foot {
+  display: grid;
+  gap: calc(0.6 * var(--ch));
+  margin-top: calc(1.6 * var(--ch));
+  font-size: max(10px, min(calc(0.66 * var(--cw)), calc(1.35 * var(--ch))));
+  line-height: 1.5;
+  color: rgba(246, 239, 227, 0.55);
+}
+.ad-rates-empty {
+  display: grid;
+  gap: calc(0.6 * var(--ch));
+  margin-top: calc(2 * var(--ch));
+  font-size: max(13px, min(calc(0.9 * var(--cw)), calc(1.9 * var(--ch))));
+  line-height: 1.5;
+  color: var(--ad-muted);
+}
+.ad-rates-skel {
+  width: calc(9 * var(--cw));
+  height: calc(2.6 * var(--ch));
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgba(246, 239, 227, 0.06), rgba(246, 239, 227, 0.14), rgba(246, 239, 227, 0.06));
+  background-size: 200% 100%;
+  animation: ad-skel 1.4s linear infinite;
+}
+@keyframes ad-skel {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ---------- Progress line ---------- */
+.ad-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 7;
+  height: 2px;
+  background: rgba(246, 239, 227, 0.08);
+  transition: bottom 0.9s var(--ad-ease);
+}
+.ad-line-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--ad-gold-soft), var(--ad-gold));
+  transform: scaleX(0);
+  transform-origin: left;
+}
+.ad-line-fill[data-timed] {
+  animation: ad-fill linear forwards;
+}
+@keyframes ad-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ---------- Controls: only while the mouse moves or a control has focus ---------- */
+.ad-controls {
+  position: absolute;
+  left: 50%;
+  bottom: max(16px, calc(3 * var(--ch)));
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  gap: max(10px, calc(0.9 * var(--cw)));
+  padding: max(8px, calc(1 * var(--ch))) max(14px, calc(1.2 * var(--cw)));
+  border-radius: 999px;
+  background: rgba(10, 7, 6, 0.72);
+  border: 1px solid rgba(246, 239, 227, 0.12);
+  opacity: 0;
+  transform: translate(-50%, calc(1.5 * var(--ch)));
+  pointer-events: none;
+  transition:
+    opacity 0.5s var(--ad-ease),
+    transform 0.5s var(--ad-ease),
+    bottom 0.9s var(--ad-ease);
+}
+.ad-stage.is-active .ad-controls,
+.ad-controls:focus-within {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+.ad-progress {
+  display: flex;
+  gap: max(6px, calc(0.4 * var(--cw)));
+}
+.ad-seg {
+  position: relative;
+  width: max(26px, calc(2.4 * var(--cw)));
+  height: max(18px, calc(2 * var(--ch)));
+  cursor: pointer;
+}
+.ad-seg::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  background: rgba(246, 239, 227, 0.25);
+}
+.ad-seg.is-done::before {
+  background: rgba(217, 180, 122, 0.55);
+}
+.ad-seg.is-on::before {
+  background: var(--ad-gold);
+}
+.ad-count {
+  min-width: 5.5em;
+  font-family: var(--ad-sans);
+  font-size: max(11px, min(calc(0.66 * var(--cw)), calc(1.4 * var(--ch))));
+  letter-spacing: 0.22em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ad-muted);
+}
+.ad-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: max(34px, calc(2.2 * var(--cw)));
+  height: max(34px, calc(2.2 * var(--cw)));
+  border: 1px solid rgba(246, 239, 227, 0.22);
+  border-radius: 50%;
+  color: var(--ad-ivory);
+  transition:
+    border-color 0.4s,
+    background-color 0.4s;
+}
+.ad-btn:hover {
+  border-color: var(--ad-gold);
+  background: rgba(217, 180, 122, 0.12);
+}
+.ad-btn:disabled {
+  opacity: 0.35;
+}
+.ad-btn svg {
+  width: 42%;
+  height: 42%;
+}
+.ad-btn:focus-visible,
+.ad-seg:focus-visible {
+  outline: 2px solid var(--ad-gold);
+  outline-offset: 3px;
+}
+
+/* ---------- Reduced motion: still frames, gentle fades only ---------- */
+.ad-stage.is-reduced .ad-layer.is-current {
+  animation-duration: 0.6s;
+}
+.ad-stage.is-reduced .ad-line-fill[data-timed] {
+  animation: none;
+  transform: scaleX(1);
+  opacity: 0.5;
+}
+
+/* ---------- Permanent price list ---------- */
+.ad-pricelist {
+  position: relative;
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  padding: max(20px, calc(5.5 * var(--ch))) max(20px, calc(2.2 * var(--cw))) max(18px, calc(4 * var(--ch)));
+  background: radial-gradient(120% 60% at 50% 0%, rgba(217, 180, 122, 0.12), transparent 60%), linear-gradient(180deg, #130d0a 0%, #0b0807 100%);
+  border-left: 1px solid var(--ad-line);
+  box-shadow: calc(-2 * var(--ch)) 0 calc(6 * var(--ch)) rgba(0, 0, 0, 0.45);
+  font-family: var(--ad-sans);
+}
+.ad-pl-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: calc(1 * var(--cw));
+  padding-bottom: calc(2.4 * var(--ch));
+  border-bottom: 1px solid var(--ad-line);
+}
+.ad-pl-title {
+  display: flex;
+  flex-direction: column;
+  gap: calc(0.6 * var(--ch));
+}
+.ad-pl-title [lang='hi'] {
+  font-family: 'Noto Serif Devanagari', var(--ad-serif);
+  font-weight: 700;
+  font-size: max(20px, calc(4.2 * var(--ch)));
+  line-height: 1.1;
+  color: var(--ad-gold);
+}
+.ad-pl-title .ad-pl-en {
+  font-size: max(10px, calc(1.3 * var(--ch)));
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ad-muted);
+}
+.ad-pl-title .ad-pl-sub {
+  font-size: max(10px, calc(1.35 * var(--ch)));
+  letter-spacing: 0.04em;
+  color: rgba(246, 239, 227, 0.6);
+}
+.ad-pl {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+.ad-pl-rows {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+.ad-pl-row {
+  display: grid;
+  align-items: baseline;
+  row-gap: calc(0.2 * var(--ch));
+  padding-block: calc(1.1 * var(--ch));
+  border-bottom: 1px solid rgba(246, 239, 227, 0.08);
+}
+.ad-pl-row:last-child {
+  border-bottom: 0;
+}
+.ad-pl-name {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6em;
+  font-size: max(11px, calc(1.55 * var(--ch)));
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ad-champagne);
+}
+.ad-pl-fine {
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  color: rgba(246, 239, 227, 0.45);
+}
+.ad-pl-price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+  white-space: nowrap;
+}
+/* Read from across the showroom: large and bold. */
+.ad-pl-value {
+  font-weight: 600;
+  font-size: max(26px, min(calc(6.6 * var(--ch)), calc(3.05 * var(--cw))));
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  color: var(--ad-ivory);
+  font-variant-numeric: tabular-nums;
+}
+.ad-pl-unit {
+  font-size: max(11px, calc(1.5 * var(--ch)));
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--ad-muted);
+}
+.ad-pl-change {
+  margin-left: auto;
+  font-size: max(10px, calc(1.3 * var(--ch)));
+  letter-spacing: 0;
+}
+.ad-pl-foot {
+  display: grid;
+  gap: calc(0.5 * var(--ch));
+  padding-top: calc(1.8 * var(--ch));
+  border-top: 1px solid var(--ad-line);
+  font-size: max(9px, calc(1.15 * var(--ch)));
+  line-height: 1.45;
+  color: rgba(246, 239, 227, 0.55);
+}
+.ad-pl-foot .ad-rates-tag {
+  font-size: max(9px, calc(1.2 * var(--ch)));
+}
+.ad-pl-note {
+  margin-block: auto;
+  font-size: max(13px, calc(1.9 * var(--ch)));
+  line-height: 1.5;
+  color: var(--ad-muted);
+}
+
+/* ---------- Full screen: only the commercial ---------- */
+/* No cursor, no controls, no progress line, even when the mouse moves. */
+.ad-stage.is-fullscreen,
+.ad-stage.is-fullscreen * {
+  cursor: none !important;
+}
+.ad-stage.is-fullscreen .ad-controls,
+.ad-stage.is-fullscreen .ad-line {
+  display: none;
+}

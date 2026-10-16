@@ -1,0 +1,17 @@
+{
+  "id": "/admin",
+  "name": "Pradeep Jewellers · Admin",
+  "short_name": "PJ Admin",
+  "description": "Manage products, offers, rates and the showroom TV for Pradeep Jewellers.",
+  "start_url": "/admin",
+  "scope": "/admin",
+  "display": "standalone",
+  "background_color": "#fffaf3",
+  "theme_color": "#832729",
+  "lang": "en-IN",
+  "icons": [
+    { "src": "/pwa/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

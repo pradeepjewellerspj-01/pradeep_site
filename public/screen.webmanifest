@@ -1,0 +1,21 @@
+{
+  "id": "/screen",
+  "name": "Pradeep Jewellers · Showroom TV",
+  "short_name": "PJ Showroom TV",
+  "description": "The Pradeep Jewellers showroom commercial with today’s gold rate, full screen.",
+  "start_url": "/screen",
+  "scope": "/screen",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "landscape",
+  "background_color": "#0b0807",
+  "theme_color": "#0b0807",
+  "lang": "en-IN",
+  "categories": ["shopping", "lifestyle"],
+  "icons": [
+    { "src": "/pwa/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [{ "src": "/pwa/tv-banner.png", "sizes": "640x360", "type": "image/png", "form_factor": "wide", "label": "Showroom TV" }]
+}

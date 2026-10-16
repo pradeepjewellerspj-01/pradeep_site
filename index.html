@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pradeep Jewellers | Timeless Jewellery for Every Occasion</title>
+    <meta name="description" content="BIS hallmark gold, silver and diamond jewellery at Pradeep Jewellers, Jawahar Market, Bhilai. Since 1981." />
+    <meta name="theme-color" content="#832729" />
+    <link rel="icon" href="/favicon.ico?v=2" sizes="48x48" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=2" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png?v=2" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2" />
+    <script>
+      // The showroom TV (/screen) and the admin panel (/admin) install as their own apps.
+      // Each gets its manifest before the page renders; the website itself is not an app.
+      (function () {
+        var p = location.pathname;
+        var app = p.indexOf('/screen') === 0 ? 'screen' : p.indexOf('/admin') === 0 ? 'admin' : null;
+        if (!app) return;
+        var link = document.createElement('link');
+        link.rel = 'manifest';
+        link.href = '/' + app + '.webmanifest';
+        document.head.appendChild(link);
+        if (app === 'screen') document.querySelector('meta[name="theme-color"]').content = '#0b0807';
+        var capable = document.createElement('meta');
+        capable.name = 'mobile-web-app-capable';
+        capable.content = 'yes';
+        document.head.appendChild(capable);
+      })();
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "JewelryStore",
+        "name": "Pradeep Jewellers",
+        "alternateName": "प्रदीप Jewellers",
+        "slogan": "आज से, सदा के लिए",
+        "foundingDate": "1981",
+        "sameAs": ["https://www.instagram.com/pradeepjewellers_bhilai/", "https://www.facebook.com/share/1DJjiiXtRz/"],
+        "image": "/apple-touch-icon.png",
+        "telephone": ["+917882296809", "+917882296609", "+917875901752", "+917875237551"],
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Jawahar Market, Camp-2, Power House",
+          "addressLocality": "Bhilai",
+          "addressRegion": "Chhattisgarh",
+          "postalCode": "490001",
+          "addressCountry": "IN"
+        }
+      }
+    </script>
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Pradeep Jewellers" />
+    <meta property="og:title" content="Pradeep Jewellers | Timeless Jewellery for Every Occasion" />
+    <meta property="og:description" content="BIS hallmark gold, silver and diamond jewellery at Pradeep Jewellers, Jawahar Market, Bhilai. Since 1981." />
+    <meta property="og:locale" content="en_IN" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Pradeep Jewellers | Timeless Jewellery for Every Occasion" />
+    <meta name="twitter:description" content="BIS hallmark gold, silver and diamond jewellery at Pradeep Jewellers, Jawahar Market, Bhilai. Since 1981." />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300;1,400&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Great+Vibes&family=IBM+Plex+Sans:ital,wght@0,200;0,300;0,400;0,500;0,600;1,400&family=Noto+Serif+Devanagari:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

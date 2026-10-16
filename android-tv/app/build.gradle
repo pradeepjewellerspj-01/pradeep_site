@@ -1,0 +1,58 @@
+plugins {
+    id 'com.android.application'
+}
+
+// The site the app opens (android-tv/gradle.properties, or -Ppj.siteUrl=... on the command line).
+def siteUrl = ((project.findProperty('pj.siteUrl') ?: '') as String).trim().replaceAll('/+$', '')
+if (!siteUrl) {
+    throw new GradleException('Set pj.siteUrl in android-tv/gradle.properties, e.g. pj.siteUrl=https://www.your-domain.com')
+}
+if (!(siteUrl ==~ /^https?:\/\/[^\s\/]+$/)) {
+    throw new GradleException("pj.siteUrl must be a plain origin like https://www.your-domain.com (got: ${siteUrl})")
+}
+
+android {
+    namespace 'com.pradeepjewellers.tv'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.pradeepjewellers.tv'
+        minSdk 21
+        targetSdk 35
+        versionCode 1
+        versionName '1.0'
+        buildConfigField 'String', 'SITE_URL', "\"${siteUrl}\""
+        // Plain http is allowed only when the configured site is http (local testing).
+        manifestPlaceholders = [usesCleartext: siteUrl.startsWith('http://').toString()]
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    // Release signing: set PJ_KEYSTORE, PJ_KEYSTORE_PASSWORD, PJ_KEY_ALIAS, PJ_KEY_PASSWORD
+    // in the environment (see android-tv/README.md). Without them, build the debug APK.
+    signingConfigs {
+        release {
+            def ks = System.getenv('PJ_KEYSTORE')
+            if (ks) {
+                storeFile file(ks)
+                storePassword System.getenv('PJ_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('PJ_KEY_ALIAS')
+                keyPassword System.getenv('PJ_KEY_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (System.getenv('PJ_KEYSTORE')) signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+}

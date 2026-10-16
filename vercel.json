@@ -1,0 +1,48 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/content",
+      "destination": "/api/site?path=/api/content"
+    },
+    {
+      "source": "/api/images/:id",
+      "destination": "/api/site?path=/api/images/:id"
+    },
+    {
+      "source": "/api/admin/:path*",
+      "destination": "/api/site?path=/api/admin/:path*"
+    },
+    {
+      "source": "/((?!api/|assets/).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        },
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
+        }
+      ]
+    },
+    {
+      "source": "/(screen|admin).webmanifest",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    }
+  ]
+}

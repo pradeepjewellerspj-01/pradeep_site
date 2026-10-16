@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Pradeep Jewellers</string>
+    <string name="screen_label">PJ Showroom TV</string>
+    <string name="admin_label">PJ Admin</string>
+    <string name="offline_title">No internet connection</string>
+    <string name="offline_body">Trying again in a few seconds…</string>
+</resources>

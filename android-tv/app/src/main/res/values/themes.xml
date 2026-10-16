@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Showroom TV: black, no bars, the page fills the screen. -->
+    <style name="Theme.PJ.Screen" parent="android:Theme.Material.NoActionBar.Fullscreen">
+        <item name="android:windowBackground">@color/stage</item>
+        <item name="android:colorPrimary">@color/stage</item>
+        <item name="android:colorAccent">@color/gold</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+
+    <!-- Admin: the brand burgundy, status bar kept for phones and tablets. -->
+    <style name="Theme.PJ.Admin" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/cream</item>
+        <item name="android:colorPrimary">@color/burgundy</item>
+        <item name="android:colorPrimaryDark">@color/burgundy</item>
+        <item name="android:colorAccent">@color/burgundy</item>
+    </style>
+
+    <color name="stage">#0B0807</color>
+    <color name="gold">#D9B47A</color>
+    <color name="ivory">#F6EFE3</color>
+    <color name="burgundy">#832729</color>
+    <color name="cream">#FFFAF3</color>
+</resources>
