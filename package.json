@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "rates:ibja": "node scripts/update-ibja-rates.mjs"
+    "rates:ibja": "node scripts/update-ibja-rates.mjs",
+    "admin:reset-password": "node scripts/reset-admin-password.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

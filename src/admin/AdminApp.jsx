@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { BadgeIndianRupee, ExternalLink, Gem, Loader2, LogOut, Megaphone, Monitor, Sparkles, Store } from 'lucide-react';
+import { BadgeIndianRupee, ExternalLink, Gem, KeyRound, Loader2, LogOut, Megaphone, Monitor, Sparkles, Store } from 'lucide-react';
 import Logo from '../components/common/Logo';
 import { api, setSignedOutHandler } from './api';
 import { Button, ErrorBanner, Field, inputClass, useNotice } from './ui';
@@ -9,6 +9,7 @@ import RatesPanel from './RatesPanel';
 import ContactPanel from './ContactPanel';
 import AdsPanel from './AdsPanel';
 import StylingPanel from './StylingPanel';
+import PasswordDialog from './PasswordDialog';
 import { bundledProducts } from '../data/products';
 import { bundledPromotions } from '../data/promotions';
 import { contactSettings } from '../data/footer';
@@ -174,6 +175,7 @@ export default function AdminApp() {
   const [session, setSession] = useState(null); // { signedIn, configured }
   const [content, setContent] = useState(null);
   const [problem, setProblem] = useState(null);
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const [tab, setTab] = useState(() => (TABS.some((t) => `#${t.id}` === window.location.hash) ? window.location.hash.slice(1) : 'products'));
   const { notify, view: noticeView } = useNotice();
 
@@ -250,6 +252,15 @@ export default function AdminApp() {
             >
               <Monitor className="size-4" /> <span className="max-sm:hidden">Showroom TV</span>
             </a>
+            {session.password?.canChange && (
+              <button
+                type="button"
+                onClick={() => setPasswordOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 font-sans text-[13px] text-muted hover:bg-blush hover:text-ink"
+              >
+                <KeyRound className="size-4" /> <span className="max-sm:hidden">Password</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={signOut}
@@ -299,6 +310,17 @@ export default function AdminApp() {
         )}
         <PoweredBy className="mt-12 border-t border-border pt-5 text-center" />
       </main>
+      {passwordOpen && (
+        <PasswordDialog
+          info={session.password}
+          onClose={() => setPasswordOpen(false)}
+          onChanged={(changedAt) => {
+            setSession((x) => ({ ...x, password: { ...x.password, changedAt } }));
+            setPasswordOpen(false);
+            notify('Password changed. Other phones and computers are signed out.');
+          }}
+        />
+      )}
       {noticeView}
     </div>
   );

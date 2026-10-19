@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { getDb, isDbConfigured } from './db.mjs';
 import { HttpError, readJson, send } from './http.mjs';
-import { isAuthConfigured, isSignedIn, login, logout, requireAdmin } from './auth.mjs';
+import { changePassword, isAuthConfigured, isSignedIn, login, logout, passwordInfo, requireAdmin } from './auth.mjs';
 import { ratesConfig } from './ibja.mjs';
 import { RATE_KEYS, cleanAd, cleanProduct, cleanPromotion, cleanSettings } from '../src/content/schema.js';
 
@@ -13,6 +13,7 @@ import { RATE_KEYS, cleanAd, cleanProduct, cleanPromotion, cleanSettings } from 
  *   POST   /api/admin/login             { password }
  *   POST   /api/admin/logout
  *   GET    /api/admin/session
+ *   PUT    /api/admin/password          { current, next }  (signed in)
  *   GET    /api/admin/content           everything, including hidden products
  *   POST   /api/admin/import            { products, promotions, settings } — first-time setup
  *   POST   /api/admin/products          create      PUT/DELETE /api/admin/products/:id
@@ -268,9 +269,18 @@ async function admin(req, res, path) {
     logout(req, res);
     return send(res, 200, { signedIn: false });
   }
-  if (section === 'session') return send(res, 200, { signedIn: isSignedIn(req), configured: { database: isDbConfigured(), signIn: isAuthConfigured() }, rates: ratesConfig() });
+  if (section === 'session') {
+    const signedIn = await isSignedIn(req);
+    return send(res, 200, {
+      signedIn,
+      configured: { database: isDbConfigured(), signIn: await isAuthConfigured() },
+      rates: ratesConfig(),
+      ...(signedIn ? { password: await passwordInfo() } : {}),
+    });
+  }
 
-  requireAdmin(req);
+  await requireAdmin(req);
+  if (section === 'password' && req.method === 'PUT') return send(res, 200, await changePassword(req, res, await readJson(req)));
   if (section === 'content' && req.method === 'GET') return send(res, 200, await readContent({ includeHidden: true }));
   if (section === 'import' && req.method === 'POST') return importContent(req, res);
   if (section === 'products') return products(req, res, id);

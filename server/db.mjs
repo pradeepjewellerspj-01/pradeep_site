@@ -17,6 +17,8 @@ const SCHEMA = [
   'CREATE TABLE IF NOT EXISTS ads (id TEXT PRIMARY KEY, position REAL NOT NULL DEFAULT 0, enabled INTEGER NOT NULL DEFAULT 1, data TEXT NOT NULL)',
   'CREATE TABLE IF NOT EXISTS settings (id TEXT PRIMARY KEY, data TEXT NOT NULL, updated_at TEXT NOT NULL)',
   'CREATE TABLE IF NOT EXISTS images (id TEXT PRIMARY KEY, content_type TEXT NOT NULL, size INTEGER NOT NULL, data BLOB NOT NULL, created_at TEXT NOT NULL)',
+  // The admin password once changed in the panel (a salted scrypt hash; see server/auth.mjs). Never sent to the site.
+  'CREATE TABLE IF NOT EXISTS admin_auth (id TEXT PRIMARY KEY, data TEXT NOT NULL, updated_at TEXT NOT NULL)',
 ];
 
 let ready = null;
