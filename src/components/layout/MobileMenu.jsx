@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronRight, Coins, Heart, Phone, Star, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ChevronDown, ChevronRight, Coins, Heart, Phone, X } from 'lucide-react';
 import Drawer from '../overlays/Drawer';
 import Logo from '../common/Logo';
-import { WhatsappIcon } from '../common/BrandIcons';
+import { GoogleIcon, WhatsappIcon } from '../common/BrandIcons';
 import { primaryNav } from '../../data/navigation';
-import { contact } from '../../data/footer';
+import { contact, googleReviewUrl } from '../../data/footer';
 import { useJewellerySelection, useStore } from '../../context/StoreContext';
 import { whatsAppUrl, buildWhatsAppMessage } from '../../services/whatsapp';
 import { formatRate, useMarketPrices } from '../../market/useMarketPrices';
@@ -18,7 +18,6 @@ export default function MobileMenu() {
   const open = panel === 'menu';
 
   const go = () => closePanel();
-  const navigate = useNavigate();
 
   return (
     <Drawer open={open} onClose={closePanel} side="left" widthClass="w-[min(380px,88vw)]" labelledBy="mobile-menu-title">
@@ -99,7 +98,6 @@ export default function MobileMenu() {
         {[
           { label: `My Selection (${count})`, icon: Heart, action: () => openPanel('selection') },
           { label: 'WhatsApp us', icon: WhatsappIcon, action: () => window.open(whatsAppUrl(buildWhatsAppMessage([])), '_blank', 'noopener') },
-          { label: 'Customer Reviews', icon: Star, action: () => (closePanel(), navigate('/reviews')) },
         ].map(({ label, icon: Icon, action }) => (
           <button
             key={label}
@@ -111,6 +109,21 @@ export default function MobileMenu() {
             {label}
           </button>
         ))}
+        {/* The same "Rate us on Google" button as in the footer. */}
+        <a
+          href={googleReviewUrl()}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="col-span-2 inline-flex items-center gap-2.5 rounded-full border border-border bg-white py-2 pl-2.5 pr-4 font-sans text-[13px] font-medium text-ink shadow-sm transition-colors hover:border-primary"
+        >
+          <GoogleIcon className="size-5" />
+          <span className="flex flex-col leading-tight">
+            <span className="text-[11px] tracking-[0.12em] text-gold" aria-hidden="true">
+              ★★★★★
+            </span>
+            Rate us on Google
+          </span>
+        </a>
       </div>
 
       <a href={`tel:${contact.phoneTel}`} className="mx-5 mb-8 flex items-center gap-2 font-sans text-[13px] text-muted">

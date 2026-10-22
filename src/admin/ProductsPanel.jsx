@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { EyeOff, Pencil, Plus, Search } from 'lucide-react';
 import { api, watermarkCopy } from './api';
 import { Button, Dialog, ErrorBanner, Field, PhotoInput, Toggle, inputClass } from './ui';
-import { METAL_OPTIONS, cleanProduct, slugify } from '../content/schema';
+import { METAL_OPTIONS, cleanProduct, metalType, slugify } from '../content/schema';
 import { primaryNav } from '../data/navigation';
 import { formatPrice } from '../data/products';
 import { resolveImage } from '../data/images';
@@ -17,6 +17,63 @@ const nextCode = (products) => {
   const n = Math.max(1000, ...products.map((p) => Number(/^pj-(\d+)$/.exec(p.id)?.[1] ?? 0)));
   return `pj-${n + 1}`;
 };
+
+const OTHER = '__other';
+const metalGroups = [
+  ['Gold', METAL_OPTIONS.filter((m) => metalType(m) === 'gold')],
+  ['Silver', METAL_OPTIONS.filter((m) => metalType(m) === 'silver')],
+  ['Gemstone', METAL_OPTIONS.filter((m) => metalType(m) === 'gemstone')],
+  ['Other', METAL_OPTIONS.filter((m) => metalType(m) === 'other')],
+];
+// The first filter on the Products page: which kind of piece.
+const METAL_FILTERS = [
+  ['all', 'All'],
+  ['gold', 'Gold'],
+  ['silver', 'Silver'],
+  ['gemstone', 'Gemstone'],
+  ['other', 'Other'],
+];
+
+/** Carat / metal as a dropdown; "Other…" opens a text box for anything not listed. */
+function MetalSelect({ value, onChange, error }) {
+  const listed = METAL_OPTIONS.includes(value);
+  const [typing, setTyping] = useState(!listed && Boolean(value));
+  return (
+    <Field label="Metal / carat" error={error}>
+      {(p) => (
+        <div className="space-y-2">
+          <select
+            {...p}
+            className={inputClass}
+            value={typing ? OTHER : listed ? value : ''}
+            onChange={(e) => {
+              const next = e.target.value;
+              setTyping(next === OTHER);
+              onChange(next === OTHER ? '' : next);
+            }}
+          >
+            <option value="" disabled>
+              Choose…
+            </option>
+            {metalGroups.map(([label, options]) => (
+              <optgroup key={label} label={label}>
+                {options.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+            <option value={OTHER}>Other…</option>
+          </select>
+          {typing && (
+            <input aria-label="Metal, as it should appear" className={inputClass} value={value} onChange={(e) => onChange(e.target.value)} placeholder="e.g. 23KT Yellow Gold" autoFocus />
+          )}
+        </div>
+      )}
+    </Field>
+  );
+}
 
 /** Whether visitors see a field (price, weight) on the product page and cards. */
 function ShowOnSite({ checked, onChange }) {
@@ -189,34 +246,22 @@ function ProductForm({ initial, isNew, allTags, categories, onSaved, onDeleted, 
             <Field label="Name" error={errors.name}>
               {(p) => <input {...p} className={inputClass} value={form.name} onChange={set('name')} placeholder="e.g. Kundan Flower Studs" />}
             </Field>
+            {/* Full width: on a phone a half-width box cuts names like "22KT Yellow Gold". */}
+            <MetalSelect value={form.metal} onChange={set('metal')} error={errors.metal} />
+            <Field
+              label="Tag no. / code"
+              error={errors.id}
+              hint={`Shown to customers as ${(form.id || 'pj-…').toUpperCase()}${!isNew && form.id !== initial.id ? `. Links shared with the old code keep working` : ''}`}
+            >
+              {(p) => <input {...p} className={inputClass} value={form.id} onChange={(e) => set('id')(e.target.value.toLowerCase().replace(/\s+/g, '-'))} />}
+            </Field>
             <div className="grid grid-cols-2 gap-3">
-              <Field
-                label="Tag no. / code"
-                error={errors.id}
-                hint={`Shown to customers as ${(form.id || 'pj-…').toUpperCase()}${!isNew && form.id !== initial.id ? `. Links shared with the old code keep working` : ''}`}
-              >
-                {(p) => <input {...p} className={inputClass} value={form.id} onChange={(e) => set('id')(e.target.value.toLowerCase().replace(/\s+/g, '-'))} />}
-              </Field>
               <div>
                 <Field label="Price (₹)" error={errors.price} hint={!errors.price ? 'Optional' : undefined}>
                   {(p) => <input {...p} className={inputClass} type="number" inputMode="numeric" min="0" value={form.price ?? ''} onChange={set('price')} />}
                 </Field>
                 <ShowOnSite checked={form.showPrice} onChange={set('showPrice')} />
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Metal" error={errors.metal}>
-                {(p) => (
-                  <>
-                    <input {...p} className={inputClass} list="pj-metals" value={form.metal} onChange={set('metal')} placeholder="Choose or type" />
-                    <datalist id="pj-metals">
-                      {METAL_OPTIONS.map((m) => (
-                        <option key={m} value={m} />
-                      ))}
-                    </datalist>
-                  </>
-                )}
-              </Field>
               <div>
                 <Field label="Weight (g)" error={errors.weight} hint={!errors.weight ? 'Optional' : undefined}>
                   {(p) => <input {...p} className={inputClass} type="number" inputMode="decimal" min="0" step="0.001" value={form.weight ?? ''} onChange={set('weight')} />}
@@ -290,6 +335,8 @@ export default function ProductsPanel({ products, setProducts, settings, setSett
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
   const [category, setCategory] = useState('all'); // 'all' | a category slug | 'none'
+  const [metal, setMetal] = useState('all'); // 'all' | gold | silver | gemstone | other
+  const ofMetal = useMemo(() => (metal === 'all' ? products : products.filter((p) => metalType(p.metal) === metal)), [products, metal]);
   const categories = categoriesOf(settings);
   const labelOf = (slug) => categories.find((c) => c.slug === slug)?.label;
   const [editing, setEditing] = useState(null); // { product, isNew }
@@ -300,13 +347,13 @@ export default function ProductsPanel({ products, setProducts, settings, setSett
     const q = query.trim().toLowerCase();
     const inCategory = (p) =>
       category === 'all' || (category === 'none' ? !categories.some((c) => p.tags.includes(c.slug)) : p.tags.includes(category));
-    return products.filter(
+    return ofMetal.filter(
       (p) =>
         (filter === 'all' || (filter === 'hidden' ? p.hidden : !p.hidden)) &&
         inCategory(p) &&
         (!q || p.name.toLowerCase().includes(q) || p.id.includes(q) || p.metal.toLowerCase().includes(q) || p.tags.some((t) => t.includes(q))),
     );
-  }, [products, query, filter, category, categories]);
+  }, [ofMetal, query, filter, category, categories]);
 
   const toggleHidden = async (p) => {
     setBusyId(p.id);
@@ -342,7 +389,7 @@ export default function ProductsPanel({ products, setProducts, settings, setSett
                 id: nextCode(products),
                 name: '',
                 price: '',
-                metal: '22KT Yellow Gold',
+                metal: metal === 'silver' ? 'Silver Jewellery' : metal === 'gemstone' ? 'Gemstone' : '22KT Yellow Gold',
                 weight: '',
                 image: '',
                 tags: category !== 'all' && category !== 'none' ? [category] : [],
@@ -385,7 +432,29 @@ export default function ProductsPanel({ products, setProducts, settings, setSett
 
       <WatermarkOldPhotos products={products} setProducts={setProducts} notify={notify} />
 
-      <CategoriesCard settings={settings} setSettings={setSettings} products={products} filter={category} setFilter={setCategory} notify={notify} />
+      {/* First the kind of piece, then the category: the category counts follow this choice. */}
+      <div role="group" aria-label="Metal" className="mt-4 flex flex-wrap gap-2">
+        {METAL_FILTERS.map(([value, label]) => {
+          const count = value === 'all' ? products.length : products.filter((p) => metalType(p.metal) === value).length;
+          if (value === 'other' && !count) return null;
+          const on = metal === value;
+          return (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={on}
+              onClick={() => setMetal(value)}
+              className={`rounded-full border px-4 py-2 font-sans text-[14px] font-medium transition-colors ${
+                on ? 'border-primary bg-primary text-white' : 'border-border-strong bg-white text-ink hover:border-primary hover:text-primary'
+              }`}
+            >
+              {label} <span className="opacity-60">{count}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <CategoriesCard settings={settings} setSettings={setSettings} products={ofMetal} filter={category} setFilter={setCategory} notify={notify} />
 
       <ul className="mt-4 divide-y divide-border overflow-hidden rounded-xl border border-border bg-white">
         {shown.map((p) => (

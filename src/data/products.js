@@ -1,4 +1,5 @@
 import { productImages as img } from './images';
+import { metalType } from '../content/schema';
 import { images } from './images';
 
 // Mock catalogue. `tags` drive category pages and search.
@@ -65,6 +66,8 @@ export const productsForSlug = (slug) => {
   if (!slug || slug === 'all-jewellery') return products;
   const priceCap = slug.match(/under-(\d+)k/);
   if (priceCap) return products.filter((p) => p.price != null && p.price <= Number(priceCap[1]) * 1000);
+  // Gold, Silver and Gemstone pages: every piece of that metal (chosen in the admin panel), or tagged so.
+  if (['gold', 'silver', 'gemstone'].includes(slug)) return products.filter((p) => metalType(p.metal) === slug || p.tags.includes(slug));
   const direct = products.filter((p) => p.tags.includes(slug));
   if (direct.length) return direct;
   const words = slug.split('-').filter((w) => w.length > 2);

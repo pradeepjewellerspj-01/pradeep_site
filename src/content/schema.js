@@ -9,14 +9,19 @@
 export const METAL_OPTIONS = [
   '24KT Yellow Gold',
   '22KT Yellow Gold',
+  '20KT Yellow Gold',
   '18KT Yellow Gold',
   '18KT White Gold',
   '18KT Rose Gold',
   '14KT Yellow Gold',
-  '999 Silver',
-  '925 Silver',
+  'Silver Jewellery',
+  'Gemstone',
   'Platinum',
 ];
+
+/** The group a piece belongs to by its metal: gold (any carat), silver, gemstone or other. */
+export const metalType = (metal = '') =>
+  /silver/i.test(metal) ? 'silver' : /gem|stone/i.test(metal) ? 'gemstone' : /gold/i.test(metal) ? 'gold' : 'other';
 
 export const PROMO_TONES = ['burgundy', 'espresso', 'ivory'];
 export const RATE_KEYS = ['gold24', 'gold22', 'gold20', 'gold18', 'silver', 'silverJewellery'];
@@ -218,9 +223,9 @@ export function cleanSettings(input) {
     if (value.reviews.length > MAX_REVIEWS) errors.reviews = `Up to ${MAX_REVIEWS} reviews`;
     if (Object.keys(errors).length) return { errors };
   }
-  // Home page sections switched on or off; optional like `screen`. Missing keys count as on.
+  // Home page sections switched on or off; optional like `screen`. Missing keys take their default.
   if (input?.home && typeof input.home === 'object') {
-    value.home = Object.fromEntries(HOME_SECTIONS.map(({ id }) => [id, input.home[id] !== false]));
+    value.home = Object.fromEntries(HOME_SECTIONS.map(({ id, on }) => [id, typeof input.home[id] === 'boolean' ? input.home[id] : on]));
   }
   // Jewellery categories (the "All Jewellery" menu and category pages); optional like `screen`.
   if (Array.isArray(input?.categories)) {
@@ -272,16 +277,16 @@ export const REVIEW_SOURCES = ['google', 'showroom'];
 
 // ---------- Home page sections ----------
 
-/** The home page's sections, in page order, that the admin panel can switch off. */
+/** The home page's sections, in page order, that the admin panel can switch on and off (`on`: the default). */
 export const HOME_SECTIONS = [
-  { id: 'promoStrip', label: 'Offers strip', hint: 'The rotating offers band under the header, on every page' },
-  { id: 'hero', label: 'Top banner slider', hint: 'The large photo slider at the top' },
-  { id: 'discovery', label: 'Shop by Category & Explore Our World', hint: 'Category circles and the Gold, Diamond, Bridal and Silver cards' },
-  { id: 'arrivals', label: 'New Arrivals', hint: 'The New Arrivals band with its two cards' },
-  { id: 'styling', label: 'Styling 101 reels', hint: 'The Instagram reels / story cards' },
-  { id: 'assurance', label: 'Pradeep Assurance', hint: 'Exchange, purity, trust and maintenance promises' },
-  { id: 'exchange', label: 'Old gold exchange', hint: 'The exchange slideshow and its steps' },
-  { id: 'promotions', label: 'Gift & exchange cards', hint: 'The #GiftOfChoice and old-gold exchange cards' },
+  { id: 'promoStrip', on: true, label: 'Offers strip', hint: 'The rotating offers band under the header, on every page' },
+  { id: 'hero', on: true, label: 'Top banner slider', hint: 'The large photo slider at the top' },
+  { id: 'discovery', on: true, label: 'Shop by Category & Explore Our World', hint: 'Category circles and the Gold, Diamond, Bridal and Silver cards' },
+  { id: 'arrivals', on: true, label: 'New Arrivals', hint: 'The New Arrivals band with its two cards' },
+  { id: 'styling', on: true, label: 'Styling 101 reels', hint: 'The Instagram reels / story cards' },
+  { id: 'assurance', on: false, label: 'Pradeep Assurance', hint: 'Exchange, purity, trust and maintenance promises' },
+  { id: 'exchange', on: false, label: 'Old gold exchange', hint: 'The exchange slideshow and its steps' },
+  { id: 'promotions', on: false, label: 'Gift & exchange cards', hint: 'The #GiftOfChoice and old-gold exchange cards' },
 ];
 
 // ---------- Categories ----------

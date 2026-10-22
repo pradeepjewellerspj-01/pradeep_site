@@ -3,7 +3,7 @@ import { api } from './api';
 import { Button, ErrorBanner, Toggle } from './ui';
 import { HOME_SECTIONS } from '../content/schema';
 
-const fromSettings = (settings) => Object.fromEntries(HOME_SECTIONS.map(({ id }) => [id, settings.home?.[id] !== false]));
+const fromSettings = (settings) => Object.fromEntries(HOME_SECTIONS.map(({ id, on }) => [id, typeof settings.home?.[id] === 'boolean' ? settings.home[id] : on]));
 
 /** Switches the home page's sections on and off. */
 export default function HomePanel({ settings, setSettings, notify }) {
