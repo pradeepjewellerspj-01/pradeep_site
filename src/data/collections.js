@@ -114,7 +114,64 @@ export const newArrivals = {
   band: images.arrivals.band,
   cards: [
     { title: 'Silver Idols', href: '/category/silver-idols', image: images.arrivals.silver, alt: 'Silver Ganesha idol with offerings' },
-    { title: 'Station Chains', href: '/category/chains', image: images.arrivals.chain, alt: 'Rose gold chain draped on white' },
+    { title: 'Snake Chains', href: '/category/chains', image: images.arrivals.chain, alt: 'Gold snake chain draped on white' },
   ],
 };
 
+
+// "Shop by Category" circles and "Explore Our World" cards on the home page.
+export const discoveryCategories = [
+  { label: 'Rings', href: '/category/rings', image: images.categories.rings },
+  { label: 'Earrings', href: '/category/earrings', image: images.categories.earrings },
+  { label: 'Bangles', href: '/category/bangles', image: images.categories.bangles },
+  { label: 'Bracelets', href: '/category/bracelets', image: images.categories.bracelets },
+];
+
+export const discoveryCollections = [
+  { label: 'Gold', subtitle: 'Timeless classics', href: '/category/gold', image: images.world.gold },
+  { label: 'Diamond', subtitle: 'A little extra brilliance', href: '/category/diamond', image: images.world.diamond },
+  { label: 'Bridal', subtitle: 'For your forever day', href: '/category/wedding', image: images.world.wedding },
+  { label: 'Silver', subtitle: 'Thoughtful gifts & keepsakes', href: '/category/silver', image: images.arrivals.silver },
+];
+
+// ---------- Admin panel (Home page tab) ----------
+// The banners, circles, cards and New Arrivals photos above can be replaced in
+// the admin panel. Saved lists replace these in place before the site renders
+// (and again with live updates); a list never saved keeps the defaults.
+
+const BUNDLED = {
+  hero: heroSlides.map((s) => ({ ...s })),
+  categories: discoveryCategories.map((c) => ({ ...c })),
+  collections: discoveryCollections.map((c) => ({ ...c })),
+  arrivals: newArrivals.cards.map((c) => ({ ...c })),
+};
+
+/** The defaults in the admin panel's shape, photos as "builtin:…" references. */
+export function bundledHomeContent(imageRef) {
+  const withRef = (list) => list.map((item) => ({ ...item, image: imageRef(item.image) }));
+  return {
+    hero: withRef(BUNDLED.hero).map(({ id, image, alt, eyebrow, title, script, subtitle, cta, href, tone, position }) => ({ id, image, alt, eyebrow, title, script, subtitle, cta, href, tone, position })),
+    categories: withRef(BUNDLED.categories),
+    collections: withRef(BUNDLED.collections),
+    arrivals: BUNDLED.arrivals.map((c) => imageRef(c.image)),
+  };
+}
+
+/** Applies the home page content saved in the admin panel. */
+export function applyHomeContent(saved, resolveImage) {
+  const photo = (ref) => (ref ? resolveImage(ref) : null);
+  const replace = (target, list) => target.splice(0, target.length, ...list);
+  replace(
+    heroSlides,
+    saved?.hero?.length
+      ? saved.hero.map((s) => ({ ...s, image: photo(s.image), alt: s.alt || `${s.title} ${s.script}`.trim() })).filter((s) => s.image)
+      : BUNDLED.hero.map((s) => ({ ...s })),
+  );
+  replace(discoveryCategories, saved?.categories?.length ? saved.categories.map((c) => ({ ...c, image: photo(c.image) })) : BUNDLED.categories.map((c) => ({ ...c })));
+  replace(discoveryCollections, saved?.collections?.length ? saved.collections.map((c) => ({ ...c, image: photo(c.image) })) : BUNDLED.collections.map((c) => ({ ...c })));
+  // New Arrivals: only the photos change; titles and links stay.
+  replace(
+    newArrivals.cards,
+    BUNDLED.arrivals.map((card, i) => ({ ...card, image: photo(saved?.arrivals?.[i]) ?? card.image })),
+  );
+}

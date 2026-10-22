@@ -17,10 +17,10 @@ function SlideCopy({ slide }) {
       <p className="hero-line font-serif text-sm tracking-[0.04em] md:text-base" style={{ fontVariationSettings: "'opsz' 40" }}>
         Pradeep Jewellers
       </p>
-      <p className="hero-line t-eyebrow mt-1.5 opacity-85">{slide.eyebrow}</p>
+      {slide.eyebrow && <p className="hero-line t-eyebrow mt-1.5 opacity-85">{slide.eyebrow}</p>}
       <h2 className="hero-line mt-3 font-serif text-[32px] font-light leading-none tracking-[0.01em] md:text-[clamp(34px,3.4vw,48px)]">{slide.title}</h2>
-      <p className="hero-line t-script -mt-0.5 text-[44px] md:text-[clamp(46px,4.6vw,66px)]">{slide.script}</p>
-      <p className="hero-line mt-3 font-display text-lg italic md:mt-5 md:text-[clamp(18px,1.5vw,22px)]">{slide.subtitle}</p>
+      {slide.script && <p className="hero-line t-script -mt-0.5 text-[44px] md:text-[clamp(46px,4.6vw,66px)]">{slide.script}</p>}
+      {slide.subtitle && <p className="hero-line mt-3 font-display text-lg italic md:mt-5 md:text-[clamp(18px,1.5vw,22px)]">{slide.subtitle}</p>}
       <div className="hero-line mt-4 md:mt-6">
         <LuxuryButton to={slide.href} variant="hero">
           {slide.cta}
@@ -55,9 +55,11 @@ export default function Hero() {
     <section aria-roledescription="carousel" aria-label="Featured collections" ref={scope} className="overflow-hidden pt-8 lg:pt-12">
       <div className="hero-frame">
         <Swiper
+          // Banners changed in the admin panel arrive live: rebuild the loop around the new set.
+          key={heroSlides.map((s) => `${s.id}:${s.image}`).join('|')}
           className="hero-swiper"
           modules={[Autoplay, A11y, Keyboard]}
-          loop
+          loop={heroSlides.length > 2} // Swiper needs a few slides to loop smoothly
           centeredSlides
           slidesPerView={1.08}
           spaceBetween={10}

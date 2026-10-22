@@ -1,24 +1,11 @@
 import { Link } from 'react-router-dom';
 import { ArrowDown, ArrowUpRight, Gem } from 'lucide-react';
-import { images } from '../../data/images';
-
-const categories = [
-  { label: 'Rings', href: '/category/rings', image: images.categories.rings },
-  { label: 'Earrings', href: '/category/earrings', image: images.categories.earrings },
-  { label: 'Bangles', href: '/category/bangles', image: images.categories.bangles },
-  { label: 'Bracelets', href: '/category/bracelets', image: images.categories.bracelets },
-];
-
-const collections = [
-  { label: 'Gold', subtitle: 'Timeless classics', href: '/category/gold', image: images.world.gold, tone: 'gold' },
-  { label: 'Diamond', subtitle: 'A little extra brilliance', href: '/category/diamond', image: images.world.diamond, tone: 'diamond' },
-  { label: 'Bridal', subtitle: 'For your forever day', href: '/category/wedding', image: images.world.wedding, tone: 'bridal' },
-  { label: 'Silver', subtitle: 'Thoughtful gifts & keepsakes', href: '/category/silver', image: images.arrivals.silver, tone: 'silver' },
-];
+// Both lists are set in the admin panel (Home page tab); see data/collections.js.
+import { discoveryCategories as categories, discoveryCollections as collections } from '../../data/collections';
 
 function CategoryCircle({ item }) {
   return (
-    <Link to={item.href} className="group flex min-w-0 flex-col items-center text-center">
+    <Link to={item.href} className="group flex w-1/4 min-w-0 flex-col items-center px-1 text-center">
       <span className="relative block size-[76px] overflow-hidden rounded-full border border-gold bg-cream p-1 shadow-[0_5px_18px_rgba(90,57,25,.08)] transition duration-500 group-hover:-translate-y-1 group-hover:shadow-[0_10px_24px_rgba(90,57,25,.16)] sm:size-[96px] md:size-[108px]">
         <img src={item.image} alt="" loading="lazy" decoding="async" className="size-full rounded-full object-cover transition-transform duration-700 group-hover:scale-110" />
       </span>
@@ -30,7 +17,7 @@ function CategoryCircle({ item }) {
 
 function CollectionCard({ item }) {
   return (
-    <Link to={item.href} className={`pj-discovery-card pj-discovery-${item.tone} group relative isolate flex min-h-[150px] flex-col items-center justify-center overflow-hidden border border-champagne px-3 py-5 text-center transition duration-500 hover:-translate-y-1 hover:shadow-[0_14px_30px_rgba(68,42,22,.15)] sm:min-h-[190px] md:min-h-[210px]`}>
+    <Link to={item.href} className={`pj-discovery-card group relative isolate flex min-h-[150px] flex-col items-center justify-center overflow-hidden border border-champagne px-3 py-5 text-center transition duration-500 hover:-translate-y-1 hover:shadow-[0_14px_30px_rgba(68,42,22,.15)] sm:min-h-[190px] md:min-h-[210px]`}>
       <img src={item.image} alt="" loading="lazy" decoding="async" className="absolute inset-0 -z-20 size-full object-cover transition-transform duration-700 group-hover:scale-105" />
       <span aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-t from-footer/85 via-footer/35 to-footer/10" />
       <Gem aria-hidden="true" className="mb-2.5 size-6 text-gold-light sm:mb-3 sm:size-8" strokeWidth={1.25} />
@@ -53,8 +40,9 @@ export default function HomeDiscovery() {
           </div>
           <span className="h-px w-7 bg-gold sm:w-14" />
         </div>
-        <div className="grid grid-cols-4 gap-2 sm:gap-5 md:gap-8">
-          {categories.map((item) => <CategoryCircle key={item.label} item={item} />)}
+        {/* Four to a row; a fifth category starts a new, centred row. */}
+        <div className="flex flex-wrap justify-center gap-y-6 sm:gap-y-8">
+          {categories.map((item) => <CategoryCircle key={`${item.label}-${item.href}`} item={item} />)}
         </div>
       </div>
 
@@ -67,7 +55,7 @@ export default function HomeDiscovery() {
           <Link to="/search" className="mb-1 inline-flex shrink-0 items-center gap-1 text-xs text-gold-deep transition hover:gap-2 sm:text-sm">View all <ArrowUpRight size={15} /></Link>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          {collections.map((item) => <CollectionCard key={item.label} item={item} />)}
+          {collections.map((item) => <CollectionCard key={`${item.label}-${item.href}`} item={item} />)}
         </div>
         <Link to="/search" className="mx-auto mt-7 flex w-fit flex-col items-center gap-2 text-gold-deep transition hover:text-primary sm:mt-9">
           <span className="flex items-center gap-3 text-[10px] font-medium uppercase tracking-[.25em] sm:text-[11px] sm:tracking-[.3em]"><span className="h-px w-8 bg-champagne sm:w-16" />More to explore<span className="h-px w-8 bg-champagne sm:w-16" /></span>

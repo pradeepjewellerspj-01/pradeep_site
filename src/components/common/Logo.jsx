@@ -2,10 +2,12 @@ import monogram from '../../assets/brand/pj-monogram.png';
 import { business } from '../../data/footer';
 import BrandNameHi from './BrandNameHi';
 
+// "प्रदीप" is sized so it spans the same width as "JEWELLERS" under it, and
+// the two lines together stand about as tall as the monogram beside them.
 const SIZES = {
-  sm: { mark: 'h-12', hi: 'text-[24px]', en: 'text-[10.5px]', gap: 'gap-2' },
-  md: { mark: 'h-[60px]', hi: 'text-[32px]', en: 'text-[13px]', gap: 'gap-3' },
-  lg: { mark: 'h-[84px]', hi: 'text-[42px]', en: 'text-[16px]', gap: 'gap-4' },
+  sm: { mark: 'h-[58px]', hi: 'text-[30px]', en: 'text-[10.5px]', gap: 'gap-2' },
+  md: { mark: 'h-[72px]', hi: 'text-[38px]', en: 'text-[13px]', gap: 'gap-2.5' },
+  lg: { mark: 'h-[100px]', hi: 'text-[50px]', en: 'text-[16px]', gap: 'gap-3.5' },
 };
 
 /**
@@ -19,9 +21,9 @@ export default function Logo({ tone = 'brand', size = 'md', tagline = false, cla
   return (
     <span className={`inline-flex items-center ${s.gap} ${className}`}>
       <img src={monogram} alt="" aria-hidden="true" className={`${s.mark} w-auto shrink-0`} />
-      <span className="flex flex-col items-start leading-none" aria-hidden="true">
-        <BrandNameHi className={`font-hindi font-bold ${s.hi} leading-[1.05] ${light ? 'text-footer-text' : 'text-brand-maroon'}`} />
-        <span className={`mt-[2px] font-serif font-semibold uppercase tracking-[0.08em] ${s.en} ${light ? 'text-gold-light' : 'text-brand-green'}`}>Jewellers</span>
+      <span className="flex flex-col items-center leading-none" aria-hidden="true">
+        <BrandNameHi className={`font-hindi font-bold ${s.hi} leading-[0.98] ${light ? 'text-footer-text' : 'text-brand-maroon'}`} />
+        <span className={`font-serif font-semibold uppercase tracking-[0.08em] ${s.en} ${light ? 'text-gold-light' : 'text-brand-green'}`}>Jewellers</span>
         {tagline && (
           <span lang="hi" className={`mt-1.5 font-hindi text-[13px] italic ${light ? 'text-gold-light' : 'text-brand-gold'}`}>
             {business.taglineHi}

@@ -5,6 +5,7 @@ import { applyStyling } from '../data/editorial';
 import { applyContactSettings } from '../data/footer';
 import { applyCategories } from '../data/navigation';
 import { applyHomeSections } from '../data/home';
+import { applyHomeContent } from '../data/collections';
 import { applyReviews } from '../data/reviews';
 import { products } from '../data/products';
 import { resolveImage } from '../data/images';
@@ -33,6 +34,7 @@ function apply(content) {
   applyAds(content.ads, content.settings?.screen);
   applyStyling(content.settings?.styling, resolveImage);
   applyHomeSections(content.settings?.home);
+  applyHomeContent(content.settings?.homeContent, resolveImage);
   applyReviews(content.settings?.reviews);
   return true;
 }

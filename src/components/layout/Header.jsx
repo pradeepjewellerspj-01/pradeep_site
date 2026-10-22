@@ -41,14 +41,20 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [navHidden, setNavHidden] = useState(false);
   const lastY = useRef(0);
+  const bar = useRef(null);
+  const [barHeight, setBarHeight] = useState(0);
 
   // Sticky header: the category bar tucks away while scrolling down and
-  // returns on scroll up.
+  // returns on scroll up. Small movements (a trackpad's jitter, a phone's
+  // bounce) are ignored so it never flickers.
   useEffect(() => {
     const onScroll = () => {
-      const y = window.scrollY;
+      const y = Math.max(0, window.scrollY);
       setScrolled(y > 8);
-      setNavHidden(y > 220 && y > lastY.current);
+      const delta = y - lastY.current;
+      if (y <= 220) setNavHidden(false);
+      else if (Math.abs(delta) > 6) setNavHidden(delta > 0);
+      else return; // keep lastY until the movement is clear
       lastY.current = y;
     };
     onScroll();
@@ -56,45 +62,68 @@ export default function Header() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // The category bar slides behind the header instead of collapsing, so the
+  // header's height (and the page under it) never moves while scrolling. A
+  // spacer after the header keeps the page clear of the bar at the top.
+  useEffect(() => {
+    const el = bar.current;
+    if (!el || typeof ResizeObserver === 'undefined') return undefined;
+    const ro = new ResizeObserver(() => setBarHeight(el.offsetHeight));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   return (
-    <header className={`sticky top-0 z-50 bg-white transition-shadow duration-500 ${scrolled ? 'shadow-[0_1px_0_var(--color-border),0_8px_24px_-18px_rgba(45,7,8,0.35)]' : 'shadow-[0_1px_0_var(--color-border)]'}`}>
-      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2">
-        Skip to content
-      </a>
+    <>
+      <header className={`sticky top-0 z-50 bg-white transition-shadow duration-500 ${scrolled ? 'shadow-[0_1px_0_var(--color-border),0_8px_24px_-18px_rgba(45,7,8,0.35)]' : 'shadow-[0_1px_0_var(--color-border)]'}`}>
+        <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2">
+          Skip to content
+        </a>
 
-      <TopBar />
+        <TopBar />
 
-      <div className="container-wide grid h-[68px] grid-cols-[auto_1fr_auto] items-center gap-2 sm:h-[76px] sm:gap-4 lg:h-[84px] lg:grid-cols-[1fr_minmax(0,560px)_1fr] lg:gap-10">
-        <div className="flex items-center gap-1">
-          <IconButton label="Open menu" onClick={() => openPanel('menu')} className="-ml-2 lg:hidden">
-            <Menu className="size-[22px]" strokeWidth={1.4} />
-          </IconButton>
-          <Link to="/" aria-label="Pradeep Jewellers home" className="shrink-0">
-            <span className="sm:hidden">
-              <Logo size="sm" />
-            </span>
-            <span className="hidden sm:block">
-              <Logo size="md" />
-            </span>
-          </Link>
+        {/* Above the category bar, full width, so the bar slides out of sight behind it. */}
+        <div className="relative z-10 bg-white">
+          <div className="container-wide grid h-[76px] grid-cols-[auto_1fr_auto] items-center gap-2 sm:h-[88px] sm:gap-4 lg:h-[96px] lg:grid-cols-[1fr_minmax(0,560px)_1fr] lg:gap-10">
+            <div className="flex items-center gap-1">
+              <IconButton label="Open menu" onClick={() => openPanel('menu')} className="-ml-2 lg:hidden">
+                <Menu className="size-[22px]" strokeWidth={1.4} />
+              </IconButton>
+              <Link to="/" aria-label="Pradeep Jewellers home" className="shrink-0">
+                <span className="sm:hidden">
+                  <Logo size="sm" />
+                </span>
+                <span className="hidden sm:block">
+                  <Logo size="md" />
+                </span>
+              </Link>
+            </div>
+
+            <div className="hidden w-full lg:block">
+              <SearchBox />
+            </div>
+
+            <div className="flex items-center justify-end gap-0.5 lg:gap-2">
+              <IconButton label="Search" onClick={() => openPanel('search')} className="lg:hidden">
+                <Search className="size-[19px]" strokeWidth={1.4} />
+              </IconButton>
+              <SelectionButton />
+            </div>
+          </div>
         </div>
 
-        <div className="hidden w-full lg:block">
-          <SearchBox />
+        {/* Category bar (desktop): hangs under the header and slides up behind it. */}
+        <div
+          ref={bar}
+          inert={navHidden}
+          className={`absolute inset-x-0 top-full hidden bg-white shadow-[0_1px_0_var(--color-border)] transition-[translate,opacity] duration-500 ease-[var(--ease-lux)] lg:block ${
+            navHidden ? 'pointer-events-none -translate-y-full opacity-0' : 'translate-y-0 opacity-100'
+          }`}
+        >
+          <DesktopNav />
         </div>
-
-        <div className="flex items-center justify-end gap-0.5 lg:gap-2">
-          <IconButton label="Search" onClick={() => openPanel('search')} className="lg:hidden">
-            <Search className="size-[19px]" strokeWidth={1.4} />
-          </IconButton>
-          <SelectionButton />
-        </div>
-      </div>
-
-      {/* Category bar (desktop) */}
-      <div className={`hidden overflow-visible transition-[max-height,opacity] duration-500 lg:block ${navHidden ? 'pointer-events-none max-h-0 opacity-0' : 'max-h-16 opacity-100'}`}>
-        <DesktopNav />
-      </div>
-    </header>
+      </header>
+      <div aria-hidden="true" className="hidden lg:block" style={{ height: barHeight }} />
+    </>
   );
 }

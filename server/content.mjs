@@ -77,14 +77,14 @@ async function readContent({ includeHidden }) {
     ],
     'read',
   );
-  const { contact, rates, screen, styling, categories, home, reviews, updatedAt } = settings;
+  const { contact, rates, screen, styling, categories, home, homeContent, reviews, updatedAt } = settings;
   return {
     initialized: true,
     updatedAt,
     products: parse(products.rows),
     promotions: parse(promotions.rows),
     ads: parse(ads.rows),
-    settings: { contact, rates, screen: screen ?? null, styling: styling ?? null, categories: categories ?? null, home: home ?? null, reviews: reviews ?? null },
+    settings: { contact, rates, screen: screen ?? null, styling: styling ?? null, categories: categories ?? null, home: home ?? null, homeContent: homeContent ?? null, reviews: reviews ?? null },
   };
 }
 
@@ -237,7 +237,7 @@ async function saveSettings(req, res) {
   const prev = await readSettings(db);
   // Each panel saves its own part; keep the parts it does not send.
   const keep = (k) => next[k] ?? prev?.[k] ?? null;
-  const doc = withRateHistory({ ...next, screen: keep('screen'), styling: keep('styling'), categories: keep('categories'), home: keep('home'), reviews: keep('reviews') }, prev);
+  const doc = withRateHistory({ ...next, screen: keep('screen'), styling: keep('styling'), categories: keep('categories'), home: keep('home'), homeContent: keep('homeContent'), reviews: keep('reviews') }, prev);
   await db.execute({ sql: "UPDATE settings SET data = ?, updated_at = ? WHERE id = 'site'", args: [JSON.stringify(doc), now()] });
   send(res, 200, doc);
 }

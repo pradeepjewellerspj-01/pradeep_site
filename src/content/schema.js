@@ -230,6 +230,12 @@ export function cleanSettings(input) {
   if (input?.home && typeof input.home === 'object') {
     value.home = Object.fromEntries(HOME_SECTIONS.map(({ id, on }) => [id, typeof input.home[id] === 'boolean' ? input.home[id] : on]));
   }
+  // Home page banners, category circles, world cards and New Arrivals photos; optional like `screen`.
+  if (input?.homeContent && typeof input.homeContent === 'object') {
+    const { value: homeContent, errors } = cleanHomeContent(input.homeContent);
+    if (errors) return { errors };
+    value.homeContent = homeContent;
+  }
   // Jewellery categories (the "All Jewellery" menu and category pages); optional like `screen`.
   if (Array.isArray(input?.categories)) {
     const errors = {};
@@ -291,6 +297,84 @@ export const HOME_SECTIONS = [
   { id: 'exchange', on: false, label: 'Old gold exchange', hint: 'The exchange slideshow and its steps' },
   { id: 'promotions', on: false, label: 'Gift & exchange cards', hint: 'The #GiftOfChoice and old-gold exchange cards' },
 ];
+
+// ---------- Home page content ----------
+
+export const MAX_HERO_SLIDES = 10;
+export const MAX_HOME_CATEGORIES = 12;
+export const MAX_HOME_COLLECTIONS = 8;
+export const HERO_TONES = ['dark', 'light'];
+const POSITION = /^\d{1,3}% \d{1,3}%$/;
+
+/**
+ * The home page's editable pieces (admin panel, Home page tab):
+ *   hero         banners: photo, the lines of text, button and link, text colour (`tone`)
+ *   categories   "Shop by Category" circles: name, link, photo
+ *   collections  "Explore Our World" cards: name, small line, link, photo
+ *   arrivals     the two New Arrivals photos (their titles and links stay)
+ * A list left out keeps the site's defaults.
+ */
+export function cleanHomeContent(input) {
+  const errors = {};
+  const value = {};
+  const page = (v) => (SITE_PATH.test(v) ? null : 'Link must be a page on this site, starting with /');
+  const photo = (v) => (!v ? 'Add a photo' : IMAGE.test(v) ? null : 'Invalid photo');
+  const list = (key, max, clean) => {
+    if (!Array.isArray(input[key])) return;
+    if (!input[key].length) errors[key] = 'Keep at least one';
+    if (input[key].length > max) errors[key] = `Up to ${max}`;
+    value[key] = input[key].slice(0, max).map((item, i) => clean(item ?? {}, (field, message) => message && (errors[`${key}.${i}.${field}`] = message)));
+  };
+
+  list('hero', MAX_HERO_SLIDES, (s, check) => {
+    const slide = {
+      id: SLUG.test(str(s.id)) ? str(s.id) : `slide-${Math.random().toString(36).slice(2, 8)}`,
+      image: str(s.image),
+      alt: str(s.alt),
+      eyebrow: str(s.eyebrow),
+      title: str(s.title),
+      script: str(s.script),
+      subtitle: str(s.subtitle),
+      cta: str(s.cta) || 'Explore Now',
+      href: str(s.href) || '/category/all-jewellery',
+      tone: HERO_TONES.includes(s.tone) ? s.tone : 'dark',
+      position: POSITION.test(str(s.position)) ? str(s.position) : '50% 50%',
+    };
+    check('image', photo(slide.image));
+    check('title', len(slide.title, 1, 40, 'Heading'));
+    check('eyebrow', slide.eyebrow.length > 30 ? 'Too long (max 30)' : null);
+    check('script', slide.script.length > 30 ? 'Too long (max 30)' : null);
+    check('subtitle', slide.subtitle.length > 70 ? 'Too long (max 70)' : null);
+    check('cta', slide.cta.length > 24 ? 'Too long (max 24)' : null);
+    check('alt', slide.alt.length > 160 ? 'Too long (max 160)' : null);
+    check('href', page(slide.href));
+    return slide;
+  });
+
+  list('categories', MAX_HOME_CATEGORIES, (c, check) => {
+    const item = { label: str(c.label), href: str(c.href), image: str(c.image) };
+    check('label', len(item.label, 1, 24, 'Name'));
+    check('href', page(item.href));
+    check('image', photo(item.image));
+    return item;
+  });
+
+  list('collections', MAX_HOME_COLLECTIONS, (c, check) => {
+    const item = { label: str(c.label), subtitle: str(c.subtitle), href: str(c.href), image: str(c.image) };
+    check('label', len(item.label, 1, 24, 'Name'));
+    check('subtitle', item.subtitle.length > 40 ? 'Too long (max 40)' : null);
+    check('href', page(item.href));
+    check('image', photo(item.image));
+    return item;
+  });
+
+  if (Array.isArray(input.arrivals)) {
+    value.arrivals = input.arrivals.slice(0, 2).map((v) => optStr(v));
+    value.arrivals.forEach((v, i) => v && !IMAGE.test(v) && (errors[`arrivals.${i}`] = 'Invalid photo'));
+  }
+
+  return Object.keys(errors).length ? { errors } : { value };
+}
 
 // ---------- Categories ----------
 
