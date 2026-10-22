@@ -1,7 +1,7 @@
-import { Coins, Gem, Sparkle, Sparkles } from 'lucide-react';
+import { Coins, Diamond, Gem, Sparkle, Sparkles } from 'lucide-react';
 
 /**
- * Category bar. Kept deliberately short: four entries, and a small dropdown
+ * Category bar. Kept deliberately short: five entries, and a small dropdown
  * only on All Jewellery and Gold. Every link points at a tag that exists in
  * data/products.js. Add a link here only once products carry its tag.
  */
@@ -27,6 +27,7 @@ export const primaryNav = [
   },
   { label: 'Silver', slug: 'silver', icon: Sparkle },
   { label: 'Diamond', slug: 'diamond', icon: Gem },
+  { label: 'Gemstones', slug: 'gemstone', icon: Diamond },
 ];
 
 const categoryGroup = primaryNav[0].menu[0];
