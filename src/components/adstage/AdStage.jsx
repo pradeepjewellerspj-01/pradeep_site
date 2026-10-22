@@ -8,6 +8,7 @@ import { playableAds, screen } from '../../data/ads';
 import { business, contact } from '../../data/footer';
 import { resolveImage } from '../../data/images';
 import { useReducedMotion } from '../../hooks/useViewportMode';
+import { useIndiaDay } from '../../hooks/useIndiaDay';
 import { gsap, useGSAP } from '../../utils/gsap';
 import './adStage.css';
 
@@ -180,7 +181,8 @@ function AdCopy({ ad, showSilver }) {
 export default function AdStage({ items, preview = false, className = '' }) {
   const reduced = useReducedMotion();
   const contentVersion = useContentVersion(); // advertisements edited in the admin panel arrive live
-  const list = useMemo(() => items ?? playableAds(), [items, contentVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+  const day = useIndiaDay(); // advertisements and offers start and end with the calendar
+  const list = useMemo(() => items ?? playableAds(), [items, contentVersion, day]); // eslint-disable-line react-hooks/exhaustive-deps
   const n = list.length;
   const [index, setIndex] = useState(0);
   const [leaving, setLeaving] = useState(null);

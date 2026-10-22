@@ -61,20 +61,23 @@ export const marketKeyForMetal = (metal = '') => {
   return null;
 };
 
+const METAL_PAGES = ['gold', 'silver', 'gemstone'];
+
 // Map loose slugs ("finger-rings", "under-25k", "gold-earrings") onto the catalogue.
 export const productsForSlug = (slug) => {
   if (!slug || slug === 'all-jewellery') return products;
   const priceCap = slug.match(/under-(\d+)k/);
   if (priceCap) return products.filter((p) => p.price != null && p.price <= Number(priceCap[1]) * 1000);
   // Gold, Silver and Gemstone pages: every piece of that metal (chosen in the admin panel), or tagged so.
-  if (['gold', 'silver', 'gemstone'].includes(slug)) return products.filter((p) => metalType(p.metal) === slug || p.tags.includes(slug));
+  if (METAL_PAGES.includes(slug)) return products.filter((p) => metalType(p.metal) === slug || p.tags.includes(slug));
   const direct = products.filter((p) => p.tags.includes(slug));
   if (direct.length) return direct;
+  // Every word must match, and a metal word only matches that metal: "gold-earrings" never lists silver earrings.
   const words = slug.split('-').filter((w) => w.length > 2);
-  const loose = products.filter((p) =>
-    words.some((w) => p.tags.some((t) => t.includes(w)) || p.name.toLowerCase().includes(w)),
-  );
-  return loose;
+  if (!words.length) return [];
+  const matches = (p, w) =>
+    METAL_PAGES.includes(w) ? metalType(p.metal) === w || p.tags.includes(w) : p.tags.some((t) => t.includes(w)) || p.name.toLowerCase().includes(w);
+  return products.filter((p) => words.every((w) => matches(p, w)));
 };
 
 export const searchProducts = (query) => {

@@ -5,13 +5,15 @@ import { activePromotions } from '../../data/promotions';
 import { homeSections } from '../../data/home';
 import { useReducedMotion } from '../../hooks/useViewportMode';
 import { useContentVersion } from '../../content/useContentVersion';
+import { useIndiaDay } from '../../hooks/useIndiaDay';
 
 const ROTATE_MS = 5500;
 
 /** Active promotions and which one is showing; rotation pauses on hover/focus and for reduced motion. */
 function usePromotionRotation() {
   const version = useContentVersion(); // offers edited in the admin panel arrive live
-  const items = useMemo(() => activePromotions(), [version]); // eslint-disable-line react-hooks/exhaustive-deps
+  const day = useIndiaDay(); // an offer's start and end dates apply on a page left open
+  const items = useMemo(() => activePromotions(), [version, day]); // eslint-disable-line react-hooks/exhaustive-deps
   const reduced = useReducedMotion();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);

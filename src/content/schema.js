@@ -28,7 +28,9 @@ export const RATE_KEYS = ['gold24', 'gold22', 'gold20', 'gold18', 'silver', 'sil
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
-const IMAGE = /^(\/api\/images\/[a-f0-9]{24}|builtin:[a-z0-9.-]+|https:\/\/\S+)$/i;
+// A page on this site: "/category/gold", never "//other-site.com" (which browsers open as another site).
+const SITE_PATH = /^\/(?![/\\])\S*$/;
+const IMAGE =/^(\/api\/images\/[a-f0-9]{24}|builtin:[a-z0-9.-]+|https:\/\/\S+)$/i;
 
 const str = (v) => (typeof v === 'string' ? v.trim() : '');
 const optStr = (v) => str(v) || null;
@@ -84,7 +86,8 @@ export function cleanProduct(input) {
           : null,
     ],
     ['metal', len(v.metal, 2, 60, 'Metal')],
-    ['weight', v.weight != null && (!Number.isFinite(v.weight) || v.weight <= 0 || v.weight > 10_000) ? 'Weight must be in grams' : null],    ['image', !IMAGE.test(v.image) ? 'Add a photo' : null],
+    ['weight', v.weight != null && (!Number.isFinite(v.weight) || v.weight <= 0 || v.weight > 10_000) ? 'Weight must be in grams' : null],
+    ['image', !IMAGE.test(v.image) ? 'Add a photo' : null],
     ['tags', !v.tags.length ? 'Choose a category (or add a tag)' : v.tags.length > 25 ? 'Too many tags' : null],
     ['description', v.description.length > 1200 ? 'Description is too long (max 1200)' : null],
   ]);
@@ -118,7 +121,7 @@ export function cleanPromotion(input) {
     ['label', len(v.label, 2, 40, 'Label')],
     ['title', len(v.title, 4, 110, 'Message')],
     ['cta', len(v.cta, 2, 20, 'Button text')],
-    ['href', !/^\/[^\s]*$/.test(v.href) ? 'Link must be a page on this site, starting with /' : null],
+    ['href', !SITE_PATH.test(v.href) ? 'Link must be a page on this site, starting with /' : null],
     ['discount', v.discount && v.discount.length > 80 ? 'Offer text is too long (max 80)' : null],
     ['image', v.image && !IMAGE.test(v.image) ? 'Invalid image' : null],
     ['startDate', v.startDate && !DAY.test(v.startDate) ? 'Invalid date' : null],
@@ -345,7 +348,7 @@ export function cleanAd(input) {
     ['media', needsMedia && !v.media ? (v.type === 'video' ? 'Add a video' : 'Add an image') : v.media && !IMAGE.test(v.media) ? 'Invalid media' : null],
     ['poster', v.poster && !IMAGE.test(v.poster) ? 'Invalid poster image' : null],
     ['cta', v.cta.length > 24 ? 'Button text is too long (max 24)' : null],
-    ['href', v.cta && !/^\/[^\s]*$/.test(v.href) ? 'Link must be a page on this site, starting with /' : null],
+    ['href', v.cta && !SITE_PATH.test(v.href) ? 'Link must be a page on this site, starting with /' : null],
     ['duration', v.duration < 3 || v.duration > 120 ? 'Between 3 and 120 seconds' : null],
     ['promotionId', v.type === 'campaign' && !v.promotionId ? 'Choose an offer' : null],
     ['startDate', v.startDate && !DAY.test(v.startDate) ? 'Invalid date' : null],

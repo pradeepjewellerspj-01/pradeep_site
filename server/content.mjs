@@ -320,13 +320,18 @@ async function admin(req, res, path) {
 /** One entry point for /api/content, /api/images/* and /api/admin/*. */
 export async function contentApiHandler(req, res) {
   // Vercel rewrites pass the original path in ?path=; under Vite req.originalUrl has it.
-  const url = new URL(req.originalUrl ?? req.url, 'http://local');
-  const pathname = url.searchParams.get('path') ?? url.pathname;
-  const parts = pathname
-    .replace(/^\/+|\/+$/g, '')
-    .split('/')
-    .map(decodeURIComponent); // ['api', 'admin', ...]
   try {
+    const url = new URL(req.originalUrl ?? req.url, 'http://local');
+    const pathname = url.searchParams.get('path') ?? url.pathname;
+    let parts;
+    try {
+      parts = pathname
+        .replace(/^\/+|\/+$/g, '')
+        .split('/')
+        .map(decodeURIComponent); // ['api', 'admin', ...]
+    } catch {
+      throw new HttpError(400, 'Invalid address'); // a malformed %-escape
+    }
     if (parts[1] === 'content' && req.method === 'GET') {
       if (!isDbConfigured()) return send(res, 200, { initialized: false });
       // Pages check this every few seconds for admin changes (src/content/siteContent.js):

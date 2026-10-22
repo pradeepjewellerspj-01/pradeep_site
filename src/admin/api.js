@@ -170,8 +170,11 @@ export async function uploadPhoto(file, { maxEdge = MAX_EDGE, watermark = true, 
   bitmap.close?.();
   if (watermark) drawWatermark(ctx, canvas.width, canvas.height, safeAspect);
   let blob = null;
+  // Safari cannot encode WebP and hands back a large PNG instead: use JPEG there.
+  const probe = await new Promise((r) => canvas.toBlob(r, 'image/webp', 0.86));
+  const type = probe?.type === 'image/webp' ? 'image/webp' : 'image/jpeg';
   for (const quality of [0.86, 0.75, 0.6]) {
-    blob = await new Promise((r) => canvas.toBlob(r, 'image/webp', quality));
+    blob = type === 'image/webp' && quality === 0.86 ? probe : await new Promise((r) => canvas.toBlob(r, type, quality));
     if (blob && blob.size <= MAX_BYTES) break;
   }
   if (!blob || blob.size > MAX_BYTES) throw new ApiError(413, 'This photo is too large even after resizing');

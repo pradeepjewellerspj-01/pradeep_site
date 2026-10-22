@@ -25,8 +25,12 @@ const MATERIALS = [
 export default function CategoryPage({ mode = 'category' }) {
   const { slug = 'all-jewellery' } = useParams();
   const [params] = useSearchParams();
-  const [material, setMaterial] = useState('all');
   const query = params.get('q') ?? '';
+  // The material filter belongs to one page: opening another category starts at "All".
+  const page = mode === 'search' ? `q:${query}` : slug;
+  const [picked, setPicked] = useState({ page, tag: 'all' });
+  const material = picked.page === page ? picked.tag : 'all';
+  const setMaterial = (tag) => setPicked({ page, tag });
 
   const title = mode === 'search' ? `Results for “${query}”` : titleFromSlug(slug);
   useDocumentTitle(mode === 'search' ? `Search: ${query}` : titleFromSlug(slug));

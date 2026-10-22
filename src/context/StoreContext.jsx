@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { getProduct } from '../data/products';
+import { useContentVersion } from '../content/useContentVersion';
 
 const StoreContext = createContext(null);
 
@@ -40,6 +41,7 @@ const readSelection = () => {
 
 export function StoreProvider({ children }) {
   const [selection, setSelection] = useState(readSelection);
+  const version = useContentVersion();
   // Which overlay is open: 'selection' | 'search' | 'menu' | null
   const [panel, setPanel] = useState(null);
   // Generic modal for service flows: { type, payload }
@@ -114,7 +116,8 @@ export function StoreProvider({ children }) {
       toast,
       notify,
     }),
-    [selection, panel, modal, toast, addToSelection, removeFromSelection, toggleSelection, clearSelection, notify],
+    // `version`: pieces renamed or removed in the admin panel update the saved selection's details.
+    [selection, panel, modal, toast, addToSelection, removeFromSelection, toggleSelection, clearSelection, notify, version], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
@@ -131,7 +134,7 @@ export function useJewellerySelection() {
   const { selection, selectedProducts, isSelected, addToSelection, removeFromSelection, toggleSelection, clearSelection, openPanel } = useStore();
   return {
     ids: selection,
-    count: selection.length,
+    count: selectedProducts.length, // pieces since hidden or deleted in the admin panel are not counted
     products: selectedProducts,
     isSelected,
     addToSelection,

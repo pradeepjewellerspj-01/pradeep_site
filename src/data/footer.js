@@ -8,6 +8,7 @@ export const footerLinks = [
       { label: 'Gold', to: '/category/gold' },
       { label: 'Silver', to: '/category/silver' },
       { label: 'Diamond', to: '/category/diamond' },
+      { label: 'Gemstones', to: '/category/gemstone' },
     ],
   },
   {
@@ -84,6 +85,8 @@ export const socialLinks = [
   { id: 'instagram', label: 'Instagram', href: import.meta.env.VITE_INSTAGRAM_URL || 'https://www.instagram.com/pradeepjewellers_bhilai/' },
   { id: 'facebook', label: 'Facebook', href: import.meta.env.VITE_FACEBOOK_URL || 'https://www.facebook.com/share/1DJjiiXtRz/' },
 ];
+// Every profile, so one the admin cleared can come back with a later live update.
+const allSocialLinks = socialLinks.map((s) => ({ ...s }));
 
 // "Rate us on Google": the review link from the Google Business Profile (Ask for reviews → Share).
 // Until one is set, the button opens the shop on Google Maps, where reviews can be written too.
@@ -112,10 +115,9 @@ export function applyContactSettings(c, telFor) {
   if (c.phones?.length) phones.splice(0, phones.length, ...c.phones.map((p) => ({ ...p, tel: telFor(p.display) })));
   hours.splice(0, hours.length, ...(c.hours ?? []));
   Object.assign(contact, { phone: phones[0].display, phoneTel: phones[0].tel }, c.whatsapp ? whatsappOf(c.whatsapp) : {});
-  for (const s of socialLinks) if (c[s.id]) s.href = c[s.id];
   if (c.googleReview !== undefined) googleReview.href = c.googleReview;
-  // Drop a profile the admin cleared.
-  for (let i = socialLinks.length - 1; i >= 0; i -= 1) if (c[socialLinks[i].id] === '') socialLinks.splice(i, 1);
+  // Saved links replace the defaults; a profile the admin cleared is left out.
+  socialLinks.splice(0, socialLinks.length, ...allSocialLinks.filter((s) => c[s.id] !== '').map((s) => ({ ...s, href: c[s.id] || s.href })));
 }
 
 // Their pages are written in src/data/legal.js.

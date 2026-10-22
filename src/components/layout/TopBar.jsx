@@ -18,8 +18,14 @@ export default function TopBar() {
   return (
     <div className="bg-stage text-ivory/75">
       <div className="container-wide flex h-[38px] items-center justify-between gap-4 font-sans text-[11px]">
-        {gold24 && market.status !== 'unavailable' ? (
-          <Link to="/gold-rate" className="group flex min-w-0 items-center gap-3 whitespace-nowrap" title={label.long} aria-label={`Gold rate: 24K ${formatRate(gold24.price)} per gram, ${label.long}. See today’s rates`}>
+        {/* A showroom may set only its 22K rate: show whichever gold rates there are. */}
+        {(gold24 || gold22) && market.status !== 'unavailable' ? (
+          <Link
+            to="/gold-rate"
+            className="group flex min-w-0 items-center gap-3 whitespace-nowrap"
+            title={label.long}
+            aria-label={`Gold rate: ${[gold24 && `24K ${formatRate(gold24.price)}`, gold22 && `22K ${formatRate(gold22.price)}`].filter(Boolean).join(', ')} per 10 grams, ${label.long}. See today’s rates`}
+          >
             <span className="flex items-center gap-1.5 text-[9.5px] uppercase tracking-[0.24em] text-champagne-soft">
               <span aria-hidden="true">✦</span> {label.short}
             </span>
@@ -27,17 +33,19 @@ export default function TopBar() {
               {market.asOf ? `Gold rate · ${formatMarketDate(market.asOf.date)}${market.asOf.session ? ` (${market.asOf.session})` : ''}` : `Gold rate today · ${formatMarketDate(market.updatedAt)}`}
             </span>
             <span aria-hidden="true" className="hidden h-3 w-px bg-ivory/20 md:inline-block" />
-            <span className="flex items-center gap-2">
-              <span className="text-ivory/50">24K</span>
-              <RollingNumber value={gold24.price} format={formatRate} className="text-ivory" />
-              <span className="text-ivory/35">/ 10 gm</span>
-              <span className="hidden sm:inline">
-                <PriceChange pct={gold24.changePct} className="text-[10.5px]" />
+            {gold24 && (
+              <span className="flex items-center gap-2">
+                <span className="text-ivory/50">24K</span>
+                <RollingNumber value={gold24.price} format={formatRate} className="text-ivory" />
+                <span className="text-ivory/35">/ 10 gm</span>
+                <span className="hidden sm:inline">
+                  <PriceChange pct={gold24.changePct} className="text-[10.5px]" />
+                </span>
               </span>
-            </span>
+            )}
             {gold22 && (
-              <span className="hidden items-center gap-2 lg:flex">
-                <span aria-hidden="true" className="h-3 w-px bg-ivory/20" />
+              <span className={`items-center gap-2 ${gold24 ? 'hidden lg:flex' : 'flex'}`}>
+                {gold24 && <span aria-hidden="true" className="h-3 w-px bg-ivory/20" />}
                 <span className="text-ivory/50">22K</span>
                 <RollingNumber value={gold22.price} format={formatRate} className="text-ivory" />
                 <span className="text-ivory/35">/ 10 gm</span>

@@ -37,7 +37,7 @@ function StoreLocator() {
               <Phone className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
               <span>
                 {phones.map((ph, i) => (
-                  <a key={ph.tel} href={`tel:${ph.tel}`} className="hover:text-primary">
+                  <a key={`${ph.tel}-${i}`} href={`tel:${ph.tel}`} className="hover:text-primary">
                     {ph.display}
                     {i < phones.length - 1 && ', '}
                   </a>
@@ -163,9 +163,11 @@ function Appointment({ onDone }) {
 function useGoldRate() {
   const market = useMarketPrices();
   const gold = market.get('gold24');
+  // A showroom may set only its 22K rate: work back to 24K from it.
+  const gold22 = market.get('gold22');
   // The feed's per-gram rate (displayed rates are per 10 gm).
   return {
-    perGram: gold ? gold.pricePerGram : null,
+    perGram: gold ? gold.pricePerGram : gold22 ? gold22.pricePerGram / 0.916 : null,
     label: marketLabel(market).long.toLowerCase(),
   };
 }
@@ -179,7 +181,7 @@ function OldGold() {
   const [karat, setKarat] = useState(22);
   const { perGram, label } = useGoldRate();
   if (!perGram) return <RateUnavailable />;
-  const value = Math.round(grams * perGram * (karat / 24));
+  const value = Math.max(0, Math.round((grams || 0) * perGram * (karat / 24)));
   return (
     <div className="space-y-4 p-6">
       <p className="font-sans text-sm text-muted">Estimate the exchange value of your old gold. Final value is assessed in store using our karatmeter.</p>

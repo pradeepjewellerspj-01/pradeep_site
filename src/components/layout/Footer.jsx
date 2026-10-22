@@ -156,7 +156,7 @@ export default function Footer() {
                     <Phone className="mt-0.5 size-4 shrink-0 text-gold-light" strokeWidth={1.4} aria-hidden="true" />
                     <span className="flex flex-wrap gap-x-1.5 gap-y-1">
                       {phones.map((ph, i) => (
-                        <a key={ph.tel} href={`tel:${ph.tel}`} className={linkClass}>
+                        <a key={`${ph.tel}-${i}`} href={`tel:${ph.tel}`} className={linkClass}>
                           {ph.display}
                           {i < phones.length - 1 && ','}
                         </a>
