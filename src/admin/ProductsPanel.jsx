@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { EyeOff, Pencil, Plus, Search } from 'lucide-react';
-import { api, watermarkCopy } from './api';
+import { PRODUCT_CARD_ASPECT, api, watermarkCopy } from './api';
 import { Button, Dialog, ErrorBanner, Field, PhotoInput, Toggle, inputClass } from './ui';
 import { METAL_OPTIONS, cleanProduct, metalType, slugify } from '../content/schema';
 import { primaryNav } from '../data/navigation';
@@ -240,8 +240,14 @@ function ProductForm({ initial, isNew, allTags, categories, onSaved, onDeleted, 
         <ErrorBanner>{problem}</ErrorBanner>
         <div className="grid gap-5 sm:grid-cols-[220px_1fr]">
           {/* Photos uploaded here are watermarked in the browser (api.js uploadPhoto). */}
-          {/* The website shows product photos whole (components/common/ProductPhoto.jsx), so the watermark can use the full photo. */}
-          <PhotoInput value={form.image} onChange={(v) => (set('image')(v), set('watermarked')(Boolean(v)))} error={errors.image} fit="contain" />
+          {/* Product cards crop photos to a square (components/common/ProductPhoto.jsx): the watermark stays inside it. */}
+          <PhotoInput
+            value={form.image}
+            onChange={(v) => (set('image')(v), set('watermarked')(Boolean(v)))}
+            error={errors.image}
+            fit="contain"
+            safeAspect={PRODUCT_CARD_ASPECT}
+          />
           <div className="space-y-4">
             <Field label="Name" error={errors.name}>
               {(p) => <input {...p} className={inputClass} value={form.name} onChange={set('name')} placeholder="e.g. Kundan Flower Studs" />}
@@ -308,7 +314,7 @@ function WatermarkOldPhotos({ products, setProducts, notify }) {
     for (const [i, p] of pending.entries()) {
       setProgress({ done: i, total: pending.length, failed });
       try {
-        const image = await watermarkCopy(resolveImage(p.image));
+        const image = await watermarkCopy(resolveImage(p.image), { safeAspect: PRODUCT_CARD_ASPECT });
         const saved = await api(`products/${encodeURIComponent(p.id)}`, { method: 'PUT', body: { ...p, image, watermarked: true } });
         setProducts((list) => list.map((x) => (x.id === p.id ? saved : x)));
       } catch {

@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { BadgeCheck, ChevronRight, RefreshCcw } from 'lucide-react';
 import ProductCard from '../components/common/ProductCard';
-import ProductPhoto from '../components/common/ProductPhoto';
 import LikeButton from '../components/jewellery/LikeButton';
 import WhatsAppEnquiry from '../components/jewellery/WhatsAppEnquiry';
 import { GoogleIcon } from '../components/common/BrandIcons';
@@ -58,8 +57,9 @@ export default function ProductPage() {
       </nav>
 
       <div className="mt-6 grid gap-8 md:grid-cols-[1.15fr_1fr] md:gap-12 lg:gap-16">
-        <div className="relative aspect-[4/5] overflow-hidden rounded-card bg-surface md:sticky md:top-32 md:self-start">
-          <ProductPhoto src={product.image} alt={product.name} fetchPriority="high" className="h-full w-full" />
+        {/* The frame takes the photo's own shape, so there are no empty bands around it; very tall photos stop at the screen height. */}
+        <div className="overflow-hidden rounded-card bg-surface md:sticky md:top-32 md:self-start">
+          <img src={product.image} alt={product.name} fetchPriority="high" className="mx-auto block h-auto max-h-[80vh] w-auto max-w-full" />
         </div>
 
         <div className="md:pt-6">

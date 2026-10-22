@@ -147,9 +147,10 @@ function drawWatermark(ctx, fullWidth, fullHeight, safeAspect) {
   ctx.restore();
 }
 
-// The shape a reel cover is cropped to on the website (see drawWatermark). Product
-// photos are shown whole (components/common/ProductPhoto.jsx), so they need none.
+// The shapes the website crops photos to (see drawWatermark): reel covers, and
+// product photos in the square product cards (components/common/ProductCard.jsx).
 export const REEL_COVER_ASPECT = 9 / 16;
+export const PRODUCT_CARD_ASPECT = 1;
 
 /**
  * Resizes a photo in the browser (WebP, longest side `maxEdge`: 1600 for

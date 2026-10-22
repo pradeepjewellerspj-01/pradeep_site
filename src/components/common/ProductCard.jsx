@@ -9,7 +9,8 @@ export default function ProductCard({ product }) {
   return (
     <article className="group relative">
       <Link to={productPath(product)} className="block" aria-label={`View ${product.name}`}>
-        <div className="relative aspect-[4/5] rounded-card">
+        {/* Square, the shape of the shop's product photos, so they fill the card without bands. */}
+        <div className="relative aspect-square rounded-card">
           <ProductPhoto src={product.image} alt={product.name} loading="lazy" decoding="async" zoom className="absolute! inset-0 rounded-card" />
           <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-black/5" />
         </div>
