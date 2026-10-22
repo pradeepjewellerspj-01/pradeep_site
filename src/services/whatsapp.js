@@ -1,5 +1,5 @@
 import { contact } from '../data/footer';
-import { formatPrice, productCode, productPath } from '../data/products';
+import { productCode, productPath } from '../data/products';
 
 const GREETING = 'Hi Pradeep Jewellers,';
 const SIGN_OFF = 'Thank you.';
@@ -8,9 +8,9 @@ const pageUrl = (product) => (typeof window === 'undefined' ? '' : `${window.loc
 
 /**
  * The one place enquiry text is written. Accepts a product or a list of products.
- * `includePrice` adds the catalogue's indicative price to a single-piece enquiry.
+ * Prices are never quoted: the showroom shares them in the chat.
  */
-export function buildWhatsAppMessage(input, { includePrice = true } = {}) {
+export function buildWhatsAppMessage(input) {
   const seen = new Set();
   const list = (Array.isArray(input) ? input : [input]).filter((p) => p && !seen.has(p.id) && seen.add(p.id));
 
@@ -23,10 +23,9 @@ export function buildWhatsAppMessage(input, { includePrice = true } = {}) {
     const url = pageUrl(p);
     return [
       `${GREETING} I'm interested in the ${p.name} (${productCode(p)}).`,
-      ...(includePrice && p.price ? [`Indicative price on your website: ${formatPrice(p.price)}`] : []),
       ...(url ? [url] : []),
       '',
-      'Please share more details.',
+      'Please share the price and more details.',
       '',
       SIGN_OFF,
     ].join('\n');

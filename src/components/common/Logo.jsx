@@ -3,9 +3,9 @@ import { business } from '../../data/footer';
 import BrandNameHi from './BrandNameHi';
 
 const SIZES = {
-  sm: { mark: 'h-10', hi: 'text-[19px]', en: 'text-[8.5px]', gap: 'gap-2' },
-  md: { mark: 'h-12', hi: 'text-[24px]', en: 'text-[10px]', gap: 'gap-2.5' },
-  lg: { mark: 'h-[72px]', hi: 'text-[34px]', en: 'text-[13px]', gap: 'gap-3.5' },
+  sm: { mark: 'h-12', hi: 'text-[24px]', en: 'text-[10.5px]', gap: 'gap-2' },
+  md: { mark: 'h-[60px]', hi: 'text-[32px]', en: 'text-[13px]', gap: 'gap-3' },
+  lg: { mark: 'h-[84px]', hi: 'text-[42px]', en: 'text-[16px]', gap: 'gap-4' },
 };
 
 /**
@@ -20,10 +20,10 @@ export default function Logo({ tone = 'brand', size = 'md', tagline = false, cla
     <span className={`inline-flex items-center ${s.gap} ${className}`}>
       <img src={monogram} alt="" aria-hidden="true" className={`${s.mark} w-auto shrink-0`} />
       <span className="flex flex-col items-start leading-none" aria-hidden="true">
-        <BrandNameHi tone={light ? 'light' : 'brand'} className={`font-hindi font-bold ${s.hi} leading-[1.05] ${light ? 'text-footer-text' : 'text-primary'}`} />
+        <BrandNameHi className={`font-hindi font-bold ${s.hi} leading-[1.05] ${light ? 'text-footer-text' : 'text-brand-maroon'}`} />
         <span className={`mt-[2px] font-serif font-semibold uppercase tracking-[0.08em] ${s.en} ${light ? 'text-gold-light' : 'text-brand-green'}`}>Jewellers</span>
         {tagline && (
-          <span lang="hi" className={`mt-1.5 font-hindi text-[13px] ${light ? 'text-footer-muted' : 'text-gold-deep'}`}>
+          <span lang="hi" className={`mt-1.5 font-hindi text-[13px] italic ${light ? 'text-gold-light' : 'text-brand-gold'}`}>
             {business.taglineHi}
           </span>
         )}

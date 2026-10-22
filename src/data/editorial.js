@@ -1,7 +1,4 @@
 import { images } from './images';
-import { formatPrice, products } from './products';
-
-const giftingFrom = Math.min(...products.filter((p) => p.tags.includes('gifting')).map((p) => p.price));
 
 // "Styling 101 With Diamonds": vertical story cards.
 export const stories = [
@@ -63,7 +60,7 @@ export const promotions = {
   gift: {
     title: '#GiftOfChoice',
     copy: 'Breathtaking gifts for your loved ones',
-    price: `Starting at ${formatPrice(giftingFrom)}`,
+    price: 'Ask us on WhatsApp',
     cta: 'Explore Now',
     href: '/category/gifting',
   },

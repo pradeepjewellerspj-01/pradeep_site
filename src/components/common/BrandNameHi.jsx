@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import { business } from '../../data/footer';
 
 /**
- * "प्रदीप" as on the letterhead: Kruti Dev 680, with "प्र" in the warm
- * bronze and "दीप" in the brand colour (gold and ivory on dark backgrounds).
+ * "प्रदीप" as on the letterhead: Kruti Dev 680, in one colour set by the
+ * caller (maroon on light backgrounds, ivory on dark ones).
  *
  * Kruti Dev is a legacy (non-Unicode) font: it draws Devanagari from Latin
- * key codes, so the name is typed as KRUTI parts. It is shown that way only
+ * key codes, so the name is typed as KRUTI. It is shown that way only
  * once the font has actually loaded; until then, and when it is missing, the
- * Unicode name in the site's Devanagari font (same two colours), so nobody
+ * Unicode name in the site's Devanagari font, so nobody
  * ever sees the raw letters.
  *
  * Where the font comes from, first match wins:
@@ -18,9 +18,8 @@ import { business } from '../../data/footer';
  */
 const FAMILY = 'Kruti Dev 680';
 // प्रदीप on the Kruti Dev keyboard: प=i ्र=z | द=n ी=h प=i
-const KRUTI = ['iz', 'nhi'];
-const UNICODE = ['प्र', 'दीप'];
-const FIRST_COLOUR = { brand: '#a2703f', light: '#d9b47a' };
+const KRUTI = 'iznhi';
+const UNICODE = 'प्रदीप';
 
 const bundled = Object.values(import.meta.glob('../../assets/fonts/KrutiDev680.{woff2,woff,ttf,otf}', { eager: true, query: '?url', import: 'default' }));
 
@@ -40,8 +39,7 @@ function loadKruti() {
   return ready;
 }
 
-/** tone 'brand' for light backgrounds, 'light' for dark ones. */
-export default function BrandNameHi({ className = '', tone = 'brand' }) {
+export default function BrandNameHi({ className = '' }) {
   const [kruti, setKruti] = useState(false);
   useEffect(() => {
     let alive = true;
@@ -50,7 +48,8 @@ export default function BrandNameHi({ className = '', tone = 'brand' }) {
       alive = false;
     };
   }, []);
-  const [first, rest] = kruti ? KRUTI : UNICODE;
+  // Kruti Dev draws its letters smaller than the Unicode font: enlarge it to the same visual size.
+  const inner = kruti ? { fontSize: '1.35em', lineHeight: 1 } : undefined;
   return (
     <span
       lang={kruti ? undefined : 'hi'}
@@ -58,8 +57,7 @@ export default function BrandNameHi({ className = '', tone = 'brand' }) {
       style={kruti ? { fontFamily: `'${FAMILY}'`, fontWeight: 'normal' } : undefined}
       aria-label={kruti ? business.nameHi : undefined}
     >
-      <span style={{ color: FIRST_COLOUR[tone] ?? FIRST_COLOUR.brand }}>{first}</span>
-      {rest}
+      <span style={inner}>{kruti ? KRUTI : UNICODE}</span>
     </span>
   );
 }

@@ -41,7 +41,10 @@
   --color-gold-soft: #c8a56a; /* muted gold: accents only */
   --color-champagne-soft: #e2c48c;
   --color-burgundy: #7a2028;
-  --color-brand-green: #3d5a2a; /* "JEWELLERS" on the letterhead */
+  /* The letterhead lockup (TEMPLATE.pdf) */
+  --color-brand-maroon: #8c1a21; /* "प्रदीप" */
+  --color-brand-green: #3d5a2a; /* "JEWELLERS" */
+  --color-brand-gold: #d1943a; /* "आज से, सदा के लिए", the lotus */
   /* Market direction (overridden for the dark stage below) */
   --color-up: #3f7351;
   --color-down: #a3423f;
@@ -870,5 +873,24 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Copy protection (hooks/useScreenshotGuard.js, public site only) ---------- */
+.capture-guard img,
+.capture-guard video {
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+.capture-guard body {
+  transition: filter 0.15s;
+}
+.capture-hidden body {
+  filter: blur(28px) brightness(0.6);
+}
+@media print {
+  .capture-guard body {
+    display: none;
   }
 }

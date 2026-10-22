@@ -36,7 +36,7 @@ function BrandLockup({ size = 'hero' }) {
     <span className={`ad-lockup ad-lockup--${size}`} data-ad-logo>
       <img src={monogram} alt="" aria-hidden="true" className="ad-lockup-mark" />
       <span className="ad-lockup-words" aria-hidden="true">
-        <BrandNameHi tone="light" className="ad-lockup-hi" />
+        <BrandNameHi className="ad-lockup-hi" />
         <span className="ad-lockup-en">Jewellers</span>
       </span>
       <span className="sr-only">{business.name}</span>

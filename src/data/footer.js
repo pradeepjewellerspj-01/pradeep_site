@@ -6,15 +6,15 @@ export const footerLinks = [
       { label: 'Gold Rate Today', to: '/gold-rate' },
       { label: 'All Jewellery', to: '/category/all-jewellery' },
       { label: 'Gold', to: '/category/gold' },
+      { label: 'Silver', to: '/category/silver' },
       { label: 'Diamond', to: '/category/diamond' },
-      { label: 'Wedding', to: '/category/wedding' },
-      { label: 'Under 50K', to: '/category/under-50k' },
     ],
   },
   {
     title: 'Pradeep Jewellers',
     links: [
       { label: 'About Pradeep', to: '/info/about-pradeep' },
+      { label: 'Customer Reviews', to: '/reviews' },
       { label: 'Find a Store', modal: 'store' },
       { label: 'Book an Appointment', modal: 'appointment' },
     ],
@@ -85,6 +85,11 @@ export const socialLinks = [
   { id: 'facebook', label: 'Facebook', href: import.meta.env.VITE_FACEBOOK_URL || 'https://www.facebook.com/share/1DJjiiXtRz/' },
 ];
 
+// "Rate us on Google": the review link from the Google Business Profile (Ask for reviews → Share).
+// Until one is set, the button opens the shop on Google Maps, where reviews can be written too.
+export const googleReview = { href: import.meta.env.VITE_GOOGLE_REVIEW_URL || '' };
+export const googleReviewUrl = () => googleReview.href || business.mapsUrl;
+
 /** The current values in the admin panel's shape (used for its first import). */
 export const contactSettings = () => ({
   whatsapp: contact.whatsappNumber,
@@ -92,6 +97,7 @@ export const contactSettings = () => ({
   address: { street: business.address.street, city: business.address.city, region: business.address.region, postalCode: business.address.postalCode },
   instagram: socialLinks.find((s) => s.id === 'instagram')?.href ?? '',
   facebook: socialLinks.find((s) => s.id === 'facebook')?.href ?? '',
+  googleReview: googleReview.href,
   hours: hours.map((h) => ({ ...h })),
 });
 
@@ -107,6 +113,7 @@ export function applyContactSettings(c, telFor) {
   hours.splice(0, hours.length, ...(c.hours ?? []));
   Object.assign(contact, { phone: phones[0].display, phoneTel: phones[0].tel }, c.whatsapp ? whatsappOf(c.whatsapp) : {});
   for (const s of socialLinks) if (c[s.id]) s.href = c[s.id];
+  if (c.googleReview !== undefined) googleReview.href = c.googleReview;
   // Drop a profile the admin cleared.
   for (let i = socialLinks.length - 1; i >= 0; i -= 1) if (c[socialLinks[i].id] === '') socialLinks.splice(i, 1);
 }

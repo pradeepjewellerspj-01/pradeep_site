@@ -8,6 +8,7 @@ const CategoryPage = lazy(() => import('./pages/CategoryPage'));
 const ProductPage = lazy(() => import('./pages/ProductPage'));
 const InfoPage = lazy(() => import('./pages/InfoPage'));
 const GoldRatePage = lazy(() => import('./pages/GoldRatePage'));
+const ReviewsPage = lazy(() => import('./pages/ReviewsPage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const AdminApp = lazy(() => import('./admin/AdminApp'));
 const ScreenPage = lazy(() => import('./pages/ScreenPage'));
@@ -40,6 +41,7 @@ export default function App() {
             <Route path="search" element={<CategoryPage mode="search" />} />
             <Route path="product/:id" element={<ProductPage />} />
             <Route path="gold-rate" element={<GoldRatePage />} />
+            <Route path="reviews" element={<ReviewsPage />} />
             <Route path="info/:slug" element={<InfoPage />} />
             <Route path="*" element={<NotFound />} />
           </Route>

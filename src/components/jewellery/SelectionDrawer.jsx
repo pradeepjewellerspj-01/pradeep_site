@@ -2,29 +2,9 @@ import { Link } from 'react-router-dom';
 import { Heart, Phone } from 'lucide-react';
 import Drawer from '../overlays/Drawer';
 import WhatsAppEnquiry from './WhatsAppEnquiry';
-import RollingNumber from '../market/RollingNumber';
-import { MarketStatus, PriceChange } from '../market/MarketBits';
 import { useJewellerySelection, useStore } from '../../context/StoreContext';
-import { formatRate, useMarketPrices } from '../../market/useMarketPrices';
 import { contact } from '../../data/footer';
 import { productCode, productPath } from '../../data/products';
-
-function MarketLine() {
-  const market = useMarketPrices();
-  const gold = market.get('gold24');
-  if (!gold) return null;
-  return (
-    <div className="flex items-center justify-between gap-3 border-b border-border/70 px-6 py-3">
-      <span className="flex items-center gap-2.5 font-sans text-[11px] uppercase tracking-[0.18em] text-muted">
-        Gold 24K
-        <RollingNumber value={gold.price} format={(v) => formatRate(v)} className="text-[12.5px] tracking-normal text-ink normal-case" />
-        <span className="tracking-normal normal-case text-subtle">/ 10 gm</span>
-        <PriceChange pct={gold.changePct} className="text-[10.5px] tracking-normal" />
-      </span>
-      <MarketStatus market={market} long={false} className="text-subtle" />
-    </div>
-  );
-}
 
 export default function SelectionDrawer() {
   const { panel, closePanel } = useStore();
@@ -63,7 +43,6 @@ export default function SelectionDrawer() {
         )
       }
     >
-      <MarketLine />
       <p className="px-6 pt-5 font-sans text-[11px] uppercase tracking-[0.24em] text-muted" aria-live="polite">
         {count} {count === 1 ? 'piece' : 'pieces'}
       </p>

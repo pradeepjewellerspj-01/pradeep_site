@@ -36,7 +36,12 @@ export const products = [
 export const formatPrice = (value) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(value);
 
-export const getProduct = (id) => products.find((p) => p.id === id);
+// Also finds a piece by a code it had before its tag number was changed.
+export const getProduct = (id) => products.find((p) => p.id === id) ?? products.find((p) => p.aliases?.includes(id));
+
+// What visitors may see: each is switched on per piece in the admin panel (both off by default).
+export const shownPrice = (product) => (product.showPrice && product.price ? product.price : null);
+export const shownWeight = (product) => (product.showWeight === true && product.weight ? product.weight : null);
 
 // Customer-facing reference, e.g. "pj-1014" → "PJ-1014".
 export const productCode = (product) => product.id.toUpperCase();
@@ -59,7 +64,7 @@ export const marketKeyForMetal = (metal = '') => {
 export const productsForSlug = (slug) => {
   if (!slug || slug === 'all-jewellery') return products;
   const priceCap = slug.match(/under-(\d+)k/);
-  if (priceCap) return products.filter((p) => p.price <= Number(priceCap[1]) * 1000);
+  if (priceCap) return products.filter((p) => p.price != null && p.price <= Number(priceCap[1]) * 1000);
   const direct = products.filter((p) => p.tags.includes(slug));
   if (direct.length) return direct;
   const words = slug.split('-').filter((w) => w.length > 2);
@@ -82,7 +87,8 @@ export const bundledProducts = products.map((p) => ({ ...p }));
 
 /**
  * Replaces the catalogue with the one saved in the admin panel, in place,
- * before the site renders. Optional fields: `weight` (grams) and `description`.
+ * before the site renders. Optional fields: `price` (never shown to visitors),
+ * `weight` (grams) and `description`.
  */
 export function applyProducts(list, resolveImage) {
   const usable = list.map((p) => ({ ...p, image: resolveImage(p.image) })).filter((p) => p.image);

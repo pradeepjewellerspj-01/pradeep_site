@@ -26,7 +26,8 @@ const writeStorage = (key, value) => {
 // drop the retired cart.
 const readSelection = () => {
   const raw = readStorage(SELECTION_KEY, null) ?? readStorage('pj-wishlist', []);
-  const saved = Array.isArray(raw) ? [...new Set(raw)].filter((id) => typeof id === 'string' && getProduct(id)) : [];
+  // Saved under an old tag number: keep the piece under its current code.
+  const saved = Array.isArray(raw) ? [...new Set(raw.filter((id) => typeof id === 'string').map((id) => getProduct(id)?.id).filter(Boolean))] : [];
   writeStorage(SELECTION_KEY, saved);
   try {
     window.localStorage.removeItem('pj-wishlist');

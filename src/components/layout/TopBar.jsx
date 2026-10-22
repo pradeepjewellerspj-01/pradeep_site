@@ -17,7 +17,7 @@ export default function TopBar() {
 
   return (
     <div className="bg-stage text-ivory/75">
-      <div className="container-wide flex h-[34px] items-center justify-between gap-4 font-sans text-[11px]">
+      <div className="container-wide flex h-[38px] items-center justify-between gap-4 font-sans text-[11px]">
         {gold24 && market.status !== 'unavailable' ? (
           <Link to="/gold-rate" className="group flex min-w-0 items-center gap-3 whitespace-nowrap" title={label.long} aria-label={`Gold rate: 24K ${formatRate(gold24.price)} per gram, ${label.long}. See today’s rates`}>
             <span className="flex items-center gap-1.5 text-[9.5px] uppercase tracking-[0.24em] text-champagne-soft">
@@ -53,14 +53,14 @@ export default function TopBar() {
         )}
 
         <div className="flex shrink-0 items-center gap-3.5">
-          <span className="hidden text-[9.5px] uppercase tracking-[0.24em] text-ivory/45 sm:inline">Follow us</span>
-          <ul className="flex items-center gap-3">
+          <span className="hidden text-[10.5px] uppercase tracking-[0.24em] text-ivory/60 sm:inline">Follow us</span>
+          <ul className="flex items-center gap-4">
             {socialLinks.map(({ id, label: name, href }) => {
                 const Icon = socialIcons[id];
                 return (
                   <li key={id}>
                     <a href={href} target="_blank" rel="noopener noreferrer" aria-label={`Pradeep Jewellers on ${name}`} className="block text-ivory/65 transition-colors hover:text-champagne-soft">
-                      <Icon className="size-[14px]" />
+                      <Icon className="size-[19px]" />
                     </a>
                   </li>
                 );

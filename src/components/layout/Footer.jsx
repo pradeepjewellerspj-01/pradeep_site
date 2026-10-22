@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, Clock, MapPin, Phone } from 'lucide-react';
 import Logo from '../common/Logo';
-import { AppleIcon, FacebookIcon, InstagramIcon, PlayStoreIcon, WhatsappIcon } from '../common/BrandIcons';
-import { business, contact, footerLinks, hours, legalLinks, phones, socialLinks } from '../../data/footer';
+import { AppleIcon, FacebookIcon, GoogleIcon, InstagramIcon, PlayStoreIcon, WhatsappIcon } from '../common/BrandIcons';
+import { business, contact, footerLinks, googleReviewUrl, hours, legalLinks, phones, socialLinks } from '../../data/footer';
 import { toSlug } from '../../data/navigation';
 import { useStore } from '../../context/StoreContext';
 
@@ -110,14 +110,28 @@ export default function Footer() {
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={`Pradeep Jewellers on ${label}`}
-                        className="inline-flex size-8 items-center justify-center rounded-full bg-footer-raise text-footer-text transition-colors hover:bg-footer-text hover:text-footer"
+                        className="inline-flex size-11 items-center justify-center rounded-full bg-footer-raise text-footer-text transition-colors hover:bg-footer-text hover:text-footer"
                       >
-                        <Icon className="size-3.5" />
+                        <Icon className="size-5" />
                       </a>
                     </li>
                   );
                 })}
               </ul>
+              <a
+                href={googleReviewUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-5 inline-flex items-center gap-2.5 rounded-full bg-white py-2 pl-2.5 pr-4 font-sans text-[13px] font-medium text-ink transition-transform duration-300 hover:-translate-y-0.5"
+              >
+                <GoogleIcon className="size-5" />
+                <span className="flex flex-col leading-tight">
+                  <span className="text-[11px] tracking-[0.12em] text-gold" aria-hidden="true">
+                    ★★★★★
+                  </span>
+                  Rate us on Google
+                </span>
+              </a>
             </div>
 
             {footerLinks.map((col) => (

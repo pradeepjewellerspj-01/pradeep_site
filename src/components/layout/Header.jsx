@@ -64,7 +64,7 @@ export default function Header() {
 
       <TopBar />
 
-      <div className="container-wide grid h-16 grid-cols-[auto_1fr_auto] items-center gap-2 sm:gap-4 lg:h-[74px] lg:grid-cols-[1fr_minmax(0,560px)_1fr] lg:gap-10">
+      <div className="container-wide grid h-[68px] grid-cols-[auto_1fr_auto] items-center gap-2 sm:h-[76px] sm:gap-4 lg:h-[84px] lg:grid-cols-[1fr_minmax(0,560px)_1fr] lg:gap-10">
         <div className="flex items-center gap-1">
           <IconButton label="Open menu" onClick={() => openPanel('menu')} className="-ml-2 lg:hidden">
             <Menu className="size-[22px]" strokeWidth={1.4} />

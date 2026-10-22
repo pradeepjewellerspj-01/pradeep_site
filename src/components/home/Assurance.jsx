@@ -9,7 +9,7 @@ export default function Assurance() {
     <section ref={scope} className="mt-14 border-t border-border lg:mt-20" aria-labelledby="assurance-title">
       <div className="mx-auto grid max-w-[1440px] md:grid-cols-2">
         <div className="flex flex-col items-center justify-center px-6 py-10 text-center md:py-16 lg:py-24" data-reveal>
-          <h2 id="assurance-title" className="t-display text-ink">
+          <h2 id="assurance-title" className="t-display text-heading">
             {first} <span className="text-primary">{second}</span>
           </h2>
           <p className="t-subtitle mt-3 md:mt-5">{assurance.subtitle}</p>

@@ -1,14 +1,14 @@
 import { useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, Navigate, useParams } from 'react-router-dom';
 import { BadgeCheck, ChevronRight, RefreshCcw } from 'lucide-react';
 import ProductCard from '../components/common/ProductCard';
+import ProductPhoto from '../components/common/ProductPhoto';
 import LikeButton from '../components/jewellery/LikeButton';
 import WhatsAppEnquiry from '../components/jewellery/WhatsAppEnquiry';
-import RollingNumber from '../components/market/RollingNumber';
-import { MarketStatus, PriceChange } from '../components/market/MarketBits';
-import { formatPrice, getProduct, marketKeyForMetal, productCode, products } from '../data/products';
+import { GoogleIcon } from '../components/common/BrandIcons';
+import { formatPrice, getProduct, productCode, productPath, products, shownPrice, shownWeight } from '../data/products';
+import { googleReviewUrl } from '../data/footer';
 import { useJewellerySelection } from '../context/StoreContext';
-import { formatRate, useMarketPrices } from '../market/useMarketPrices';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import NotFound from './NotFound';
 
@@ -29,27 +29,6 @@ function useMetaDescription(text) {
   }, [text]);
 }
 
-/** Today's reference rate for the piece's metal: the market → jewellery link. */
-function MetalRate({ metal }) {
-  const market = useMarketPrices();
-  const key = marketKeyForMetal(metal);
-  const rate = (key === 'silver' && market.get('silverJewellery')) || market.get(key);
-  if (!rate) return null;
-  return (
-    <div className="mt-6 rounded-card border border-champagne/70 bg-cream px-4 py-3.5">
-      <div className="flex items-center justify-between gap-3">
-        <p className="font-sans text-[10.5px] uppercase tracking-[0.2em] text-muted">Today’s {rate.label} rate</p>
-        <MarketStatus market={market} long={false} className="text-subtle" />
-      </div>
-      <p className="mt-1.5 flex items-baseline gap-3">
-        <RollingNumber value={rate.price} format={(v) => formatRate(v)} className="font-sans text-xl font-light text-ink" />
-        <span className="font-sans text-xs text-muted">/ {rate.unitLabel}</span>
-        <PriceChange pct={rate.changePct} className="text-[11px]" />
-      </p>
-    </div>
-  );
-}
-
 export default function ProductPage() {
   const { id } = useParams();
   const product = getProduct(id);
@@ -58,6 +37,8 @@ export default function ProductPage() {
   useMetaDescription(product ? `${product.name} in ${product.metal} (${productCode(product)}) from Pradeep Jewellers. Save it to your selection or enquire on WhatsApp.` : null);
 
   if (!product) return <NotFound />;
+  // An old tag number: show the piece at its current address.
+  if (product.id !== id) return <Navigate to={productPath(product)} replace />;
   const related = products.filter((p) => p.id !== product.id && p.tags.some((t) => product.tags.includes(t))).slice(0, 4);
   // With other pieces saved, offer to enquire about the whole selection together.
   const withSelection = isSelected(product.id) ? selected : [...selected, product];
@@ -78,7 +59,7 @@ export default function ProductPage() {
 
       <div className="mt-6 grid gap-8 md:grid-cols-[1.15fr_1fr] md:gap-12 lg:gap-16">
         <div className="relative aspect-[4/5] overflow-hidden rounded-card bg-surface md:sticky md:top-32 md:self-start">
-          <img src={product.image} alt={product.name} className="h-full w-full object-cover" fetchPriority="high" />
+          <ProductPhoto src={product.image} alt={product.name} fetchPriority="high" className="h-full w-full" />
         </div>
 
         <div className="md:pt-6">
@@ -90,19 +71,28 @@ export default function ProductPage() {
             <span className="tabular-nums">{productCode(product)}</span>
           </p>
           <h1 className="mt-3 font-serif text-3xl font-light leading-tight text-heading md:text-[42px]">{product.name}</h1>
-          <p className="mt-2 t-eyebrow text-primary">
-            {product.metal}
-            {product.weight ? <span className="text-muted"> · approx. {product.weight} g</span> : null}
-          </p>
           {product.description && <p className="mt-4 max-w-prose font-sans text-[14.5px] leading-relaxed text-text">{product.description}</p>}
 
-          <p className="mt-6 font-sans text-[11px] uppercase tracking-[0.2em] text-muted">Indicative price</p>
-          <p className="mt-1 font-sans text-2xl font-light text-ink">{formatPrice(product.price)}</p>
-          <p className="mt-1 font-sans text-xs text-muted">The final price follows the day’s metal rate and is confirmed by our team when you enquire.</p>
+          <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-3 border-y border-border py-4 font-sans sm:grid-cols-3">
+            {[
+              ['Tag no.', productCode(product)],
+              ['Metal', product.metal],
+              ...(shownWeight(product) ? [['Weight', `approx. ${shownWeight(product)} g`]] : []),
+              ...(shownPrice(product) ? [['Price', formatPrice(shownPrice(product))]] : []),
+            ].map(([term, value]) => (
+              <div key={term}>
+                <dt className="text-[10.5px] uppercase tracking-[0.2em] text-muted">{term}</dt>
+                <dd className="mt-0.5 text-[14px] tabular-nums text-ink">{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-3 font-sans text-xs text-muted">
+            {shownPrice(product)
+              ? 'The final price follows the day’s metal rate and is confirmed by our team on WhatsApp.'
+              : 'For price and availability, message us on WhatsApp.'}
+          </p>
 
-          <MetalRate metal={product.metal} />
-
-          <div className="mt-8 flex gap-3">
+          <div className="mt-6 flex gap-3">
             <WhatsAppEnquiry products={product} className="flex-1" label="Ask about this piece on WhatsApp" />
             <LikeButton product={product} variant="outline" />
           </div>
@@ -115,6 +105,21 @@ export default function ProductPage() {
               ariaLabel={`Enquire about this piece together with your selection, ${withSelection.length} pieces, on WhatsApp`}
             />
           )}
+
+          <a
+            href={googleReviewUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-2 font-sans text-[13px] text-muted transition-colors hover:text-primary"
+          >
+            <GoogleIcon className="size-4" />
+            <span>
+              Visited us? <span className="underline underline-offset-4">Rate us on Google</span>
+            </span>
+          </a>
+          <Link to="/reviews" className="ml-4 mt-4 inline-flex font-sans text-[13px] text-muted underline underline-offset-4 transition-colors hover:text-primary">
+            Read customer reviews
+          </Link>
 
           <ul className="mt-6 grid grid-cols-2 gap-3 border-t border-border pt-6">
             {promises.map(({ icon: Icon, text }) => (

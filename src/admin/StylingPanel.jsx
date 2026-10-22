@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowDown, ArrowUp, CheckCircle2, ChevronDown, ExternalLink, Eye, EyeOff, Plus, Trash2 } from 'lucide-react';
-import { api } from './api';
+import { REEL_COVER_ASPECT, api } from './api';
 import { Button, ErrorBanner, Field, PhotoInput, inputClass } from './ui';
 import { MAX_REELS, cleanSettings, reelCode } from '../content/schema';
 import { InstagramIcon } from '../components/common/BrandIcons';
@@ -135,7 +135,7 @@ function ReelRow({ reel, index, total, errors, groups, onChange, onMove, onRemov
           </div>
 
           <div className="w-[150px] max-md:w-[130px]">
-            <PhotoInput label="Card cover (optional)" aspect="aspect-[9/16]" value={reel.cover} error={errors[`styling.${index}.cover`]} onChange={(v) => onChange('cover', v)} />
+            <PhotoInput label="Card cover (optional)" aspect="aspect-[9/16]" safeAspect={REEL_COVER_ASPECT} value={reel.cover} error={errors[`styling.${index}.cover`]} onChange={(v) => onChange('cover', v)} />
             <p className="mt-1 font-sans text-[11.5px] leading-snug text-subtle">A screenshot of the reel works well.</p>
           </div>
         </div>

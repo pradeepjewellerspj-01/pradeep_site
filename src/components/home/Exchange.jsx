@@ -77,7 +77,7 @@ export default function Exchange() {
 
   return (
     <section ref={scope} className="section-y" aria-labelledby="exchange-title">
-      <SectionHeading id="exchange-title" tone="ink" title={exchange.title} subtitle={exchange.subtitle} />
+      <SectionHeading id="exchange-title" title={exchange.title} subtitle={exchange.subtitle} />
 
       <div className="relative mt-7 aspect-[4/3] overflow-hidden bg-ink sm:aspect-[16/8] md:mt-10 lg:aspect-[890/290]" data-reveal-media>
         {/* The film zooms this wrapper; the scroll reveal animates the img inside, so the two never fight. */}

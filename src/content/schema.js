@@ -57,20 +57,34 @@ export function cleanProduct(input) {
     tags: [...new Set((Array.isArray(input.tags) ? input.tags : String(input.tags ?? '').split(',')).map((t) => slugify(t)).filter(Boolean))],
     description: str(input.description),
     hidden: Boolean(input.hidden),
+    // Whether visitors see the price and weight (both optional). Both are hidden unless switched on.
+    showPrice: Boolean(input.showPrice),
+    showWeight: input.showWeight === true,
     position: Number.isFinite(Number(input.position)) ? Number(input.position) : 0,
+    // Codes the piece had before (its old links keep working); set by the server on a rename.
+    aliases: [...new Set((Array.isArray(input.aliases) ? input.aliases : []).map(str).filter((a) => SLUG.test(a)))].slice(-20),
+    // Whether the photo carries the shop's watermark (set when uploaded through the admin panel).
+    watermarked: Boolean(input.watermarked),
   };
+  v.aliases = v.aliases.filter((a) => a !== v.id);
   const errors = collect([
     ['id', !SLUG.test(v.id) || v.id.length > 40 ? 'Code must be lowercase letters, numbers and dashes' : null],
     ['name', len(v.name, 2, 120, 'Name')],
-    ['price', !Number.isFinite(v.price) || v.price < 0 || v.price > 100_000_000 ? 'Enter the price in rupees' : null],
+    [
+      'price',
+      v.price != null && (!Number.isFinite(v.price) || v.price < 0 || v.price > 100_000_000)
+        ? 'Enter the price in rupees'
+        : v.showPrice && !v.price
+          ? 'Enter the price to show it on the website'
+          : null,
+    ],
     ['metal', len(v.metal, 2, 60, 'Metal')],
-    ['weight', v.weight != null && (!Number.isFinite(v.weight) || v.weight <= 0 || v.weight > 10_000) ? 'Weight must be in grams' : null],
-    ['image', !IMAGE.test(v.image) ? 'Add a photo' : null],
+    ['weight', v.weight != null && (!Number.isFinite(v.weight) || v.weight <= 0 || v.weight > 10_000) ? 'Weight must be in grams' : null],    ['image', !IMAGE.test(v.image) ? 'Add a photo' : null],
     ['tags', !v.tags.length ? 'Choose a category (or add a tag)' : v.tags.length > 25 ? 'Too many tags' : null],
     ['description', v.description.length > 1200 ? 'Description is too long (max 1200)' : null],
   ]);
   if (errors) return { errors };
-  v.price = Math.round(v.price);
+  if (v.price != null) v.price = Math.round(v.price);
   if (v.weight != null) v.weight = Math.round(v.weight * 1000) / 1000;
   return { value: v };
 }
@@ -133,6 +147,7 @@ export function cleanSettings(input) {
     },
     instagram: str(c.instagram),
     facebook: str(c.facebook),
+    googleReview: str(c.googleReview),
     hours: (Array.isArray(c.hours) ? c.hours : []).map((h) => ({ days: str(h.days), time: str(h.time) })).filter((h) => h.days || h.time),
   };
   if (contact.whatsapp.length === 10) contact.whatsapp = `91${contact.whatsapp}`;
@@ -158,6 +173,7 @@ export function cleanSettings(input) {
     ['contact.address.postalCode', contact.address.postalCode && !/^\d{6}$/.test(contact.address.postalCode) ? 'PIN code has 6 digits' : null],
     ['contact.instagram', !url(contact.instagram) ? 'Use your https://www.instagram.com/… link' : null],
     ['contact.facebook', !url(contact.facebook) ? 'Use your https://www.facebook.com/… link' : null],
+    ['contact.googleReview', contact.googleReview && !/^https:\/\/\S+$/i.test(contact.googleReview) ? 'Use the https:// review link from your Google Business Profile' : null],
     ['contact.hours', contact.hours.length > 7 ? 'Up to 7 rows' : contact.hours.some((h) => h.days.length > 40 || h.time.length > 60) ? 'Keep each row short' : null],
     [
       'rates.values',
@@ -180,6 +196,31 @@ export function cleanSettings(input) {
       ['screen.logo', value.screen.logo && !IMAGE.test(value.screen.logo) ? 'Invalid logo image' : null],
     ]);
     if (e) return { errors: e };
+  }
+  // Customer reviews for the Reviews page; optional like `screen`.
+  if (Array.isArray(input?.reviews)) {
+    const errors = {};
+    value.reviews = input.reviews.slice(0, MAX_REVIEWS + 1).map((r, i) => {
+      const review = {
+        name: str(r?.name),
+        rating: Math.round(Number(r?.rating)),
+        text: str(r?.text),
+        date: optStr(r?.date),
+        source: REVIEW_SOURCES.includes(r?.source) ? r.source : 'google',
+      };
+      if (!review.name) errors[`reviews.${i}.name`] = 'Name is required';
+      else if (review.name.length > 60) errors[`reviews.${i}.name`] = 'Name is too long (max 60)';
+      if (!(review.rating >= 1 && review.rating <= 5)) errors[`reviews.${i}.rating`] = 'Choose 1 to 5 stars';
+      if (review.text.length > 1000) errors[`reviews.${i}.text`] = 'Review is too long (max 1000)';
+      if (review.date && !DAY.test(review.date)) errors[`reviews.${i}.date`] = 'Invalid date';
+      return review;
+    });
+    if (value.reviews.length > MAX_REVIEWS) errors.reviews = `Up to ${MAX_REVIEWS} reviews`;
+    if (Object.keys(errors).length) return { errors };
+  }
+  // Home page sections switched on or off; optional like `screen`. Missing keys count as on.
+  if (input?.home && typeof input.home === 'object') {
+    value.home = Object.fromEntries(HOME_SECTIONS.map(({ id }) => [id, input.home[id] !== false]));
   }
   // Jewellery categories (the "All Jewellery" menu and category pages); optional like `screen`.
   if (Array.isArray(input?.categories)) {
@@ -222,6 +263,26 @@ export function cleanSettings(input) {
   }
   return { value };
 }
+
+// ---------- Customer reviews ----------
+
+export const MAX_REVIEWS = 60;
+// Where the review was written: on Google, or given in the showroom.
+export const REVIEW_SOURCES = ['google', 'showroom'];
+
+// ---------- Home page sections ----------
+
+/** The home page's sections, in page order, that the admin panel can switch off. */
+export const HOME_SECTIONS = [
+  { id: 'promoStrip', label: 'Offers strip', hint: 'The rotating offers band under the header, on every page' },
+  { id: 'hero', label: 'Top banner slider', hint: 'The large photo slider at the top' },
+  { id: 'discovery', label: 'Shop by Category & Explore Our World', hint: 'Category circles and the Gold, Diamond, Bridal and Silver cards' },
+  { id: 'arrivals', label: 'New Arrivals', hint: 'The New Arrivals band with its two cards' },
+  { id: 'styling', label: 'Styling 101 reels', hint: 'The Instagram reels / story cards' },
+  { id: 'assurance', label: 'Pradeep Assurance', hint: 'Exchange, purity, trust and maintenance promises' },
+  { id: 'exchange', label: 'Old gold exchange', hint: 'The exchange slideshow and its steps' },
+  { id: 'promotions', label: 'Gift & exchange cards', hint: 'The #GiftOfChoice and old-gold exchange cards' },
+];
 
 // ---------- Categories ----------
 

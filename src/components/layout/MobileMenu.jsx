@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { CalendarDays, ChevronDown, ChevronRight, Coins, Heart, MapPin, Phone, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ChevronDown, ChevronRight, Coins, Heart, Phone, Star, X } from 'lucide-react';
 import Drawer from '../overlays/Drawer';
 import Logo from '../common/Logo';
 import { WhatsappIcon } from '../common/BrandIcons';
@@ -11,13 +11,14 @@ import { whatsAppUrl, buildWhatsAppMessage } from '../../services/whatsapp';
 import { formatRate, useMarketPrices } from '../../market/useMarketPrices';
 
 export default function MobileMenu() {
-  const { panel, closePanel, openPanel, openModal } = useStore();
+  const { panel, closePanel, openPanel } = useStore();
   const { count } = useJewellerySelection();
   const gold24 = useMarketPrices().get('gold24');
   const [expanded, setExpanded] = useState(null);
   const open = panel === 'menu';
 
   const go = () => closePanel();
+  const navigate = useNavigate();
 
   return (
     <Drawer open={open} onClose={closePanel} side="left" widthClass="w-[min(380px,88vw)]" labelledBy="mobile-menu-title">
@@ -98,8 +99,7 @@ export default function MobileMenu() {
         {[
           { label: `My Selection (${count})`, icon: Heart, action: () => openPanel('selection') },
           { label: 'WhatsApp us', icon: WhatsappIcon, action: () => window.open(whatsAppUrl(buildWhatsAppMessage([])), '_blank', 'noopener') },
-          { label: 'Find a Store', icon: MapPin, action: () => (closePanel(), openModal('store')) },
-          { label: 'Book Appointment', icon: CalendarDays, action: () => (closePanel(), openModal('appointment')) },
+          { label: 'Customer Reviews', icon: Star, action: () => (closePanel(), navigate('/reviews')) },
         ].map(({ label, icon: Icon, action }) => (
           <button
             key={label}

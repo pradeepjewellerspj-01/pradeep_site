@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { EyeOff, Pencil, Plus, Search } from 'lucide-react';
-import { api } from './api';
+import { api, watermarkCopy } from './api';
 import { Button, Dialog, ErrorBanner, Field, PhotoInput, Toggle, inputClass } from './ui';
 import { METAL_OPTIONS, cleanProduct, slugify } from '../content/schema';
 import { primaryNav } from '../data/navigation';
@@ -17,6 +17,16 @@ const nextCode = (products) => {
   const n = Math.max(1000, ...products.map((p) => Number(/^pj-(\d+)$/.exec(p.id)?.[1] ?? 0)));
   return `pj-${n + 1}`;
 };
+
+/** Whether visitors see a field (price, weight) on the product page and cards. */
+function ShowOnSite({ checked, onChange }) {
+  return (
+    <label className="mt-2 flex cursor-pointer items-center gap-2 font-sans text-[12.5px] text-ink">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="size-4 accent-primary" />
+      Show on website
+    </label>
+  );
+}
 
 /** One button per category: a piece can be in several (e.g. Earrings and Bridal). */
 function CategoryPicker({ categories, value, onChange, error }) {
@@ -125,8 +135,9 @@ function ProductForm({ initial, isNew, allTags, categories, onSaved, onDeleted, 
     if (local) return;
     setBusy('save');
     try {
-      const saved = await api(isNew ? 'products' : `products/${encodeURIComponent(form.id)}`, { method: isNew ? 'POST' : 'PUT', body: form });
-      onSaved(saved, isNew);
+      // An edit goes to the piece's current code; a changed code in the form renames it.
+      const saved = await api(isNew ? 'products' : `products/${encodeURIComponent(initial.id)}`, { method: isNew ? 'POST' : 'PUT', body: form });
+      onSaved(saved, isNew, initial.id);
     } catch (e) {
       setErrors(e.errors ?? {});
       setProblem(e.message);
@@ -136,11 +147,11 @@ function ProductForm({ initial, isNew, allTags, categories, onSaved, onDeleted, 
   };
 
   const remove = async () => {
-    if (!window.confirm(`Delete “${form.name}” (${form.id.toUpperCase()})? This cannot be undone. To take it off the site for now, use “Hide from the website” instead.`)) return;
+    if (!window.confirm(`Delete “${form.name}” (${initial.id.toUpperCase()})? This cannot be undone. To take it off the site for now, use “Hide from the website” instead.`)) return;
     setBusy('delete');
     try {
-      await api(`products/${encodeURIComponent(form.id)}`, { method: 'DELETE' });
-      onDeleted(form.id);
+      await api(`products/${encodeURIComponent(initial.id)}`, { method: 'DELETE' });
+      onDeleted(initial.id);
     } catch (e) {
       setProblem(e.message);
       setBusy(null);
@@ -150,7 +161,7 @@ function ProductForm({ initial, isNew, allTags, categories, onSaved, onDeleted, 
   return (
     <Dialog
       open
-      title={isNew ? 'Add a piece' : `Edit ${form.id.toUpperCase()}`}
+      title={isNew ? 'Add a piece' : `Edit ${initial.id.toUpperCase()}`}
       onClose={onClose}
       footer={
         <>
@@ -171,18 +182,27 @@ function ProductForm({ initial, isNew, allTags, categories, onSaved, onDeleted, 
       <div className="space-y-5">
         <ErrorBanner>{problem}</ErrorBanner>
         <div className="grid gap-5 sm:grid-cols-[220px_1fr]">
-          <PhotoInput value={form.image} onChange={set('image')} error={errors.image} />
+          {/* Photos uploaded here are watermarked in the browser (api.js uploadPhoto). */}
+          {/* The website shows product photos whole (components/common/ProductPhoto.jsx), so the watermark can use the full photo. */}
+          <PhotoInput value={form.image} onChange={(v) => (set('image')(v), set('watermarked')(Boolean(v)))} error={errors.image} fit="contain" />
           <div className="space-y-4">
             <Field label="Name" error={errors.name}>
               {(p) => <input {...p} className={inputClass} value={form.name} onChange={set('name')} placeholder="e.g. Kundan Flower Studs" />}
             </Field>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Product code" error={errors.id} hint={isNew ? 'Shown to customers as ' + (form.id || 'pj-…').toUpperCase() : 'Cannot be changed'}>
-                {(p) => <input {...p} className={inputClass} value={form.id} onChange={(e) => set('id')(e.target.value.toLowerCase())} disabled={!isNew} />}
+              <Field
+                label="Tag no. / code"
+                error={errors.id}
+                hint={`Shown to customers as ${(form.id || 'pj-…').toUpperCase()}${!isNew && form.id !== initial.id ? `. Links shared with the old code keep working` : ''}`}
+              >
+                {(p) => <input {...p} className={inputClass} value={form.id} onChange={(e) => set('id')(e.target.value.toLowerCase().replace(/\s+/g, '-'))} />}
               </Field>
-              <Field label="Indicative price (₹)" error={errors.price}>
-                {(p) => <input {...p} className={inputClass} type="number" inputMode="numeric" min="0" value={form.price ?? ''} onChange={set('price')} />}
-              </Field>
+              <div>
+                <Field label="Price (₹)" error={errors.price} hint={!errors.price ? 'Optional' : undefined}>
+                  {(p) => <input {...p} className={inputClass} type="number" inputMode="numeric" min="0" value={form.price ?? ''} onChange={set('price')} />}
+                </Field>
+                <ShowOnSite checked={form.showPrice} onChange={set('showPrice')} />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Metal" error={errors.metal}>
@@ -197,9 +217,12 @@ function ProductForm({ initial, isNew, allTags, categories, onSaved, onDeleted, 
                   </>
                 )}
               </Field>
-              <Field label="Weight (g)" error={errors.weight} hint="Optional">
-                {(p) => <input {...p} className={inputClass} type="number" inputMode="decimal" min="0" step="0.001" value={form.weight ?? ''} onChange={set('weight')} />}
-              </Field>
+              <div>
+                <Field label="Weight (g)" error={errors.weight} hint={!errors.weight ? 'Optional' : undefined}>
+                  {(p) => <input {...p} className={inputClass} type="number" inputMode="decimal" min="0" step="0.001" value={form.weight ?? ''} onChange={set('weight')} />}
+                </Field>
+                <ShowOnSite checked={form.showWeight} onChange={set('showWeight')} />
+              </div>
             </div>
           </div>
         </div>
@@ -225,6 +248,41 @@ function ProductForm({ initial, isNew, allTags, categories, onSaved, onDeleted, 
         />
       </div>
     </Dialog>
+  );
+}
+
+/** Stamps the watermark on photos added before watermarking existed, one piece at a time. */
+function WatermarkOldPhotos({ products, setProducts, notify }) {
+  const pending = products.filter((p) => !p.watermarked && p.image);
+  const [progress, setProgress] = useState(null); // { done, total, failed }
+  if (!pending.length && !progress) return null;
+
+  const run = async () => {
+    if (!window.confirm(`Add the watermark to ${pending.length} older photos? A watermarked copy replaces each photo on the website.`)) return;
+    let failed = 0;
+    for (const [i, p] of pending.entries()) {
+      setProgress({ done: i, total: pending.length, failed });
+      try {
+        const image = await watermarkCopy(resolveImage(p.image));
+        const saved = await api(`products/${encodeURIComponent(p.id)}`, { method: 'PUT', body: { ...p, image, watermarked: true } });
+        setProducts((list) => list.map((x) => (x.id === p.id ? saved : x)));
+      } catch {
+        failed += 1;
+      }
+    }
+    setProgress(null);
+    notify(failed ? `${pending.length - failed} photos watermarked, ${failed} could not be` : 'All photos are watermarked', failed ? 'error' : 'ok');
+  };
+
+  return (
+    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-champagne bg-cream px-4 py-3">
+      <p className="font-sans text-[13px] text-ink">
+        {progress ? `Watermarking photo ${progress.done + 1} of ${progress.total}… keep this page open.` : `${pending.length} older ${pending.length === 1 ? 'photo has' : 'photos have'} no watermark yet.`}
+      </p>
+      <Button variant="outline" busy={Boolean(progress)} onClick={run}>
+        Watermark them now
+      </Button>
+    </div>
   );
 }
 
@@ -290,6 +348,8 @@ export default function ProductsPanel({ products, setProducts, settings, setSett
                 tags: category !== 'all' && category !== 'none' ? [category] : [],
                 description: '',
                 hidden: false,
+                showPrice: false,
+                showWeight: false,
               },
             })
           }
@@ -323,6 +383,8 @@ export default function ProductsPanel({ products, setProducts, settings, setSett
         </div>
       </div>
 
+      <WatermarkOldPhotos products={products} setProducts={setProducts} notify={notify} />
+
       <CategoriesCard settings={settings} setSettings={setSettings} products={products} filter={category} setFilter={setCategory} notify={notify} />
 
       <ul className="mt-4 divide-y divide-border overflow-hidden rounded-xl border border-border bg-white">
@@ -340,21 +402,29 @@ export default function ProductsPanel({ products, setProducts, settings, setSett
               </p>
               <p className="truncate font-sans text-[12px] text-muted">
                 {p.id.toUpperCase()} · {p.metal}
-                {p.weight ? ` · ${p.weight} g` : ''}
+                {p.weight ? ` · ${p.weight} g${p.showWeight === true ? '' : ' (hidden)'}` : ''}
                 {(() => {
                   const names = p.tags.map(labelOf).filter(Boolean);
                   return names.length ? <span className="text-primary"> · {names.join(', ')}</span> : <span className="text-subtle"> · No category</span>;
                 })()}
               </p>
             </div>
-            <p className="hidden shrink-0 font-sans text-[13.5px] tabular-nums text-ink sm:block">{formatPrice(p.price)}</p>
+            <p className="hidden shrink-0 text-right font-sans text-[13.5px] tabular-nums text-ink sm:block">
+              {p.price != null ? formatPrice(p.price) : <span className="text-subtle">No price</span>}
+              {p.price != null && <span className={`block text-[11px] ${p.showPrice ? 'text-up' : 'text-subtle'}`}>{p.showPrice ? 'Shown on website' : 'Hidden'}</span>}
+            </p>
             <Button variant="ghost" className="px-3!" busy={busyId === p.id} onClick={() => toggleHidden(p)}>
               {p.hidden ? 'Show' : 'Hide'}
             </Button>
             <Button
               variant="outline"
               className="px-3!"
-              onClick={() => setEditing({ isNew: false, product: { ...p, weight: p.weight ?? '', description: p.description ?? '' } })}
+              onClick={() =>
+                setEditing({
+                  isNew: false,
+                  product: { ...p, price: p.price ?? '', weight: p.weight ?? '', description: p.description ?? '', showPrice: Boolean(p.showPrice), showWeight: p.showWeight === true },
+                })
+              }
               aria-label={`Edit ${p.name}`}
             >
               <Pencil className="size-3.5" /> <span className="max-sm:hidden">Edit</span>
@@ -372,10 +442,14 @@ export default function ProductsPanel({ products, setProducts, settings, setSett
           allTags={allTags}
           categories={categories}
           onClose={() => setEditing(null)}
-          onSaved={(saved, isNew) => {
-            setProducts((list) => (isNew ? [saved, ...list] : list.map((x) => (x.id === saved.id ? saved : x))));
+          onSaved={(saved, isNew, previousId) => {
+            setProducts((list) => (isNew ? [saved, ...list] : list.map((x) => (x.id === previousId ? saved : x))));
+            // The server moved reels linked to a renamed piece; keep this copy in step.
+            if (!isNew && saved.id !== previousId && settings.styling?.some((r) => r.productId === previousId)) {
+              setSettings({ ...settings, styling: settings.styling.map((r) => (r.productId === previousId ? { ...r, productId: saved.id } : r)) });
+            }
             setEditing(null);
-            notify(isNew ? 'Added to the website' : 'Saved');
+            notify(isNew ? 'Added to the website' : saved.id !== previousId ? `Saved as ${saved.id.toUpperCase()}` : 'Saved');
           }}
           onDeleted={(id) => {
             setProducts((list) => list.filter((x) => x.id !== id));

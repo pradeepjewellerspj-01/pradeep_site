@@ -90,7 +90,7 @@ The strip under the header reads `src/data/promotions.js` (or the admin panel's 
 
 ## Placeholders to replace before launch
 
-- **Catalogue and prices.** `src/data/products.js` is a mock catalogue (manage the real one in the admin panel). Prices are shown as *Indicative price* on product pages only.
+- **Catalogue and prices.** `src/data/products.js` is a mock catalogue (manage the real one in the admin panel). Price and weight are optional, and each has a per-piece "Show on website" switch in the admin product form (both off by default; `shownPrice` / `shownWeight` in `src/data/products.js`). Uploaded photos are watermarked in the browser before upload (`src/admin/api.js`).
 - **Market rates.** Deploy `/api/rates` with the site (see Market data). Without it, visitors see the bundled snapshot and its date.
 - **Promotion dates and offers.** Confirm campaign dates, and add `discount` text only for offers the store has approved.
 - **Photography.** It is Unsplash stock (Unsplash License). Swap the files in `src/assets/images/`, keeping the same names.

@@ -4,6 +4,8 @@ import { applyAds } from '../data/ads';
 import { applyStyling } from '../data/editorial';
 import { applyContactSettings } from '../data/footer';
 import { applyCategories } from '../data/navigation';
+import { applyHomeSections } from '../data/home';
+import { applyReviews } from '../data/reviews';
 import { products } from '../data/products';
 import { resolveImage } from '../data/images';
 import { setShowroomRates } from '../market/marketService';
@@ -30,6 +32,8 @@ function apply(content) {
   setShowroomRates(content.settings?.rates);
   applyAds(content.ads, content.settings?.screen);
   applyStyling(content.settings?.styling, resolveImage);
+  applyHomeSections(content.settings?.home);
+  applyReviews(content.settings?.reviews);
   return true;
 }
 

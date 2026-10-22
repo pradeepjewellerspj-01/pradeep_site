@@ -9,9 +9,9 @@ export const heroSlides = [
     eyebrow: 'Presents',
     title: 'The joy of',
     script: 'adorning',
-    subtitle: 'Explore latest designs under ₹50k',
+    subtitle: 'Explore our latest designs',
     cta: 'Explore Now',
-    href: '/category/under-50k',
+    href: '/category/all-jewellery',
     tone: 'dark',
     position: '30% 50%',
   },
@@ -73,8 +73,8 @@ export const heroSlides = [
 // "Pradeep Collections": one tall feature + two stacked tiles.
 export const featuredCollections = {
   feature: {
-    title: 'Under 50k',
-    href: '/category/under-50k',
+    title: 'Pendants',
+    href: '/category/pendants',
     image: images.collections.pendant,
     alt: 'Emerald-cut pendant glowing in warm light',
   },

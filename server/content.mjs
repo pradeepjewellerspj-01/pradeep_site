@@ -16,7 +16,7 @@ import { RATE_KEYS, cleanAd, cleanProduct, cleanPromotion, cleanSettings } from 
  *   PUT    /api/admin/password          { current, next }  (signed in)
  *   GET    /api/admin/content           everything, including hidden products
  *   POST   /api/admin/import            { products, promotions, settings } — first-time setup
- *   POST   /api/admin/products          create      PUT/DELETE /api/admin/products/:id
+ *   POST   /api/admin/products          create      PUT/DELETE /api/admin/products/:id  (PUT may change the code)
  *   POST   /api/admin/promotions        create      PUT/DELETE /api/admin/promotions/:id
  *   POST   /api/admin/ads               create      PUT/DELETE /api/admin/ads/:id   (large-screen advertisements)
  *   PUT    /api/admin/ads-order         { ids } — play order
@@ -77,14 +77,14 @@ async function readContent({ includeHidden }) {
     ],
     'read',
   );
-  const { contact, rates, screen, styling, categories, updatedAt } = settings;
+  const { contact, rates, screen, styling, categories, home, reviews, updatedAt } = settings;
   return {
     initialized: true,
     updatedAt,
     products: parse(products.rows),
     promotions: parse(promotions.rows),
     ads: parse(ads.rows),
-    settings: { contact, rates, screen: screen ?? null, styling: styling ?? null, categories: categories ?? null },
+    settings: { contact, rates, screen: screen ?? null, styling: styling ?? null, categories: categories ?? null, home: home ?? null, reviews: reviews ?? null },
   };
 }
 
@@ -117,6 +117,12 @@ function withRateHistory(next, prev) {
 
 // ---------- Records (products, promotions) ----------
 
+/** Whether a product code is in use, as a code or as another piece's old code. */
+async function productCodeTaken(db, code, ownId) {
+  const { rows } = await db.execute('SELECT id, data FROM products');
+  return rows.some((r) => r.id !== ownId && (r.id === code || (JSON.parse(r.data).aliases ?? []).includes(code)));
+}
+
 function crud(table, clean) {
   return async (req, res, id) => {
     const db = await getDb();
@@ -124,8 +130,9 @@ function crud(table, clean) {
     if (req.method === 'POST' && !id) {
       const doc = cleanOrThrow(clean, await readJson(req));
       const { rows } = await db.execute({ sql: `SELECT 1 FROM ${table} WHERE id = ?`, args: [doc.id] });
-      if (rows.length) throw invalid({ id: 'This code is already used' });
+      if (rows.length || (table === 'products' && (await productCodeTaken(db, doc.id)))) throw invalid({ id: 'This code is already used' });
       if (table === 'products') {
+        doc.aliases = [];
         const { rows: first } = await db.execute('SELECT MIN(position) AS p FROM products');
         doc.position = (first[0]?.p ?? 0) - 1; // new pieces appear first
       }
@@ -140,8 +147,26 @@ function crud(table, clean) {
       const { rows } = await db.execute({ sql: `SELECT data FROM ${table} WHERE id = ?`, args: [id] });
       if (!rows.length) throw new HttpError(404, 'Not found');
       const current = JSON.parse(rows[0].data);
-      const doc = cleanOrThrow(clean, { ...(await readJson(req)), id, ...(TABLES[table].columns(current).position !== undefined ? { position: current.position } : {}) });
-      await db.batch([upsert(table, doc), touchNow()], 'write');
+      const body = await readJson(req);
+      // A product's code (its tag number) can be changed; other records keep their id.
+      const nextId = table === 'products' && typeof body?.id === 'string' ? body.id.trim().toLowerCase() : id;
+      // Old codes are kept by the server, never taken from the request, so links shared before a rename keep working.
+      const aliases = table === 'products' ? { aliases: [...(current.aliases ?? []), ...(nextId !== id ? [id] : [])] } : {};
+      const doc = cleanOrThrow(clean, { ...body, id: nextId, ...aliases, ...(TABLES[table].columns(current).position !== undefined ? { position: current.position } : {}) });
+      if (doc.id === id) {
+        await db.batch([upsert(table, doc), touchNow()], 'write');
+        return send(res, 200, doc);
+      }
+      if (await productCodeTaken(db, doc.id, id)) throw invalid({ id: 'This code is already used' });
+      const renames = [{ sql: `DELETE FROM ${table} WHERE id = ?`, args: [id] }, upsert(table, doc)];
+      // Styling 101 reels that link to the piece follow it to its new code.
+      const settings = await readSettings(db);
+      if (settings?.styling?.some((r) => r.productId === id)) {
+        const { updatedAt, ...data } = settings;
+        const styling = settings.styling.map((r) => (r.productId === id ? { ...r, productId: doc.id } : r));
+        renames.push({ sql: "UPDATE settings SET data = ? WHERE id = 'site'", args: [JSON.stringify({ ...data, styling })] });
+      }
+      await db.batch([...renames, touchNow()], 'write');
       return send(res, 200, doc);
     }
     if (req.method === 'DELETE' && id) {
@@ -212,7 +237,7 @@ async function saveSettings(req, res) {
   const prev = await readSettings(db);
   // Each panel saves its own part; keep the parts it does not send.
   const keep = (k) => next[k] ?? prev?.[k] ?? null;
-  const doc = withRateHistory({ ...next, screen: keep('screen'), styling: keep('styling'), categories: keep('categories') }, prev);
+  const doc = withRateHistory({ ...next, screen: keep('screen'), styling: keep('styling'), categories: keep('categories'), home: keep('home'), reviews: keep('reviews') }, prev);
   await db.execute({ sql: "UPDATE settings SET data = ?, updated_at = ? WHERE id = 'site'", args: [JSON.stringify(doc), now()] });
   send(res, 200, doc);
 }

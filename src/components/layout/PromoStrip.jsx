@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { activePromotions } from '../../data/promotions';
+import { homeSections } from '../../data/home';
 import { useReducedMotion } from '../../hooks/useViewportMode';
 import { useContentVersion } from '../../content/useContentVersion';
 
@@ -38,7 +39,7 @@ function usePromotionRotation() {
 export default function PromoStrip({ className = '' }) {
   const { items, index, setIndex, pauseHandlers } = usePromotionRotation();
 
-  if (!items.length) return null;
+  if (!items.length || !homeSections.promoStrip) return null;
 
   const current = items[index];
 

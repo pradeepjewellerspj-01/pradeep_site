@@ -11,6 +11,7 @@ import ServiceModal from '../overlays/ServiceModal';
 import Toast from '../overlays/Toast';
 import { useStore } from '../../context/StoreContext';
 import { ScrollTrigger } from '../../utils/gsap';
+import { useScreenshotGuard } from '../../hooks/useScreenshotGuard';
 
 function RouteEffects() {
   const { pathname, search, hash } = useLocation();
@@ -34,6 +35,7 @@ function RouteEffects() {
 }
 
 export default function Layout() {
+  useScreenshotGuard();
   return (
     <>
       <RouteEffects />

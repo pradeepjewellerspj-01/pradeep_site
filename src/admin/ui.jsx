@@ -98,7 +98,8 @@ export function Dialog({ open, title, onClose, children, footer, wide = false })
 }
 
 /** Photo picker: shows the current photo and uploads a replacement. */
-export function PhotoInput({ value, onChange, error, aspect = 'aspect-square', label = 'Photo' }) {
+/** `safeAspect`: the shape the website crops this photo to, so the watermark stays inside it. */
+export function PhotoInput({ value, onChange, error, aspect = 'aspect-square', label = 'Photo', watermark = true, safeAspect = null, fit = 'cover' }) {
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState(null);
   const input = useRef(null);
@@ -109,7 +110,7 @@ export function PhotoInput({ value, onChange, error, aspect = 'aspect-square', l
     setBusy(true);
     setProblem(null);
     try {
-      onChange(await uploadPhoto(file));
+      onChange(await uploadPhoto(file, { watermark, safeAspect }));
     } catch (e) {
       setProblem(e.message);
     } finally {
@@ -119,10 +120,10 @@ export function PhotoInput({ value, onChange, error, aspect = 'aspect-square', l
   };
 
   return (
-    <Field label={label} error={problem || error} hint="JPEG, PNG or WebP. Resized automatically.">
+    <Field label={label} error={problem || error} hint={`JPEG, PNG or WebP. Resized${watermark ? ' and watermarked' : ''} automatically.`}>
       {({ id }) => (
         <div className={`relative w-full max-w-[220px] overflow-hidden rounded-lg border border-dashed ${error ? 'border-down' : 'border-border-strong'} bg-cream ${aspect}`}>
-          {src && <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" />}
+          {src && <img src={src} alt="" className={`absolute inset-0 h-full w-full ${fit === 'contain' ? 'object-contain' : 'object-cover'}`} />}
           <label
             htmlFor={id}
             className={`absolute inset-0 flex cursor-pointer flex-col items-center justify-center gap-1.5 font-sans text-[12.5px] transition-colors ${

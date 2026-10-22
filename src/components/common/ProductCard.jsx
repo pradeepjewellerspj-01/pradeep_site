@@ -1,15 +1,16 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import LikeButton from '../jewellery/LikeButton';
+import ProductPhoto from './ProductPhoto';
 import WhatsAppEnquiry from '../jewellery/WhatsAppEnquiry';
-import { productCode, productPath } from '../../data/products';
+import { formatPrice, productCode, productPath, shownPrice, shownWeight } from '../../data/products';
 
 export default function ProductCard({ product }) {
   return (
     <article className="group relative">
       <Link to={productPath(product)} className="block" aria-label={`View ${product.name}`}>
-        <div className="media-zoom relative aspect-[4/5] rounded-card bg-surface">
-          <img src={product.image} alt={product.name} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full rounded-card object-cover" />
+        <div className="relative aspect-[4/5] rounded-card">
+          <ProductPhoto src={product.image} alt={product.name} loading="lazy" decoding="async" zoom className="absolute! inset-0 rounded-card" />
           <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-inset ring-black/5" />
         </div>
       </Link>
@@ -24,7 +25,14 @@ export default function ProductCard({ product }) {
             <span>{product.metal}</span>
             <span aria-hidden="true" className="h-2.5 w-px bg-border-strong" />
             <span className="tabular-nums text-subtle">{productCode(product)}</span>
+            {shownWeight(product) && (
+              <>
+                <span aria-hidden="true" className="h-2.5 w-px bg-border-strong" />
+                <span className="tabular-nums normal-case tracking-normal">{shownWeight(product)} g</span>
+              </>
+            )}
           </p>
+          {shownPrice(product) && <p className="mt-1 font-sans text-[13.5px] tabular-nums text-ink">{formatPrice(shownPrice(product))}</p>}
         </div>
         <WhatsAppEnquiry products={product} variant="icon" className="-mr-1.5 -mt-1 shrink-0" />
       </div>

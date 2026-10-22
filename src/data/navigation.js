@@ -1,7 +1,7 @@
-import { BadgeIndianRupee, Coins, Gem, HeartHandshake, Sparkles } from 'lucide-react';
+import { Coins, Gem, Sparkle, Sparkles } from 'lucide-react';
 
 /**
- * Category bar. Kept deliberately short: five entries, and a small dropdown
+ * Category bar. Kept deliberately short: four entries, and a small dropdown
  * only on All Jewellery and Gold. Every link points at a tag that exists in
  * data/products.js. Add a link here only once products carry its tag.
  */
@@ -25,9 +25,8 @@ export const primaryNav = [
     icon: Coins,
     menu: [{ title: 'Gold', links: [link('Gold Earrings', 'gold-earrings'), link('Gold Chains', 'gold-chains'), link('Gold Bangles', 'gold-bangles'), link('Gold Coins', 'gold-coins')] }],
   },
+  { label: 'Silver', slug: 'silver', icon: Sparkle },
   { label: 'Diamond', slug: 'diamond', icon: Gem },
-  { label: 'Wedding', slug: 'wedding', icon: HeartHandshake },
-  { label: 'Under 50K', slug: 'under-50k', icon: BadgeIndianRupee },
 ];
 
 const categoryGroup = primaryNav[0].menu[0];

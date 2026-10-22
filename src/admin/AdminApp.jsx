@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { BadgeIndianRupee, ExternalLink, Gem, KeyRound, Loader2, LogOut, Megaphone, Monitor, Sparkles, Store } from 'lucide-react';
+import { BadgeIndianRupee, ExternalLink, Gem, KeyRound, LayoutList, Loader2, LogOut, Megaphone, Monitor, Sparkles, Star, Store } from 'lucide-react';
 import Logo from '../components/common/Logo';
 import { api, setSignedOutHandler } from './api';
 import { Button, ErrorBanner, Field, inputClass, useNotice } from './ui';
@@ -9,6 +9,8 @@ import RatesPanel from './RatesPanel';
 import ContactPanel from './ContactPanel';
 import AdsPanel from './AdsPanel';
 import StylingPanel from './StylingPanel';
+import HomePanel from './HomePanel';
+import ReviewsPanel from './ReviewsPanel';
 import PasswordDialog from './PasswordDialog';
 import { bundledProducts } from '../data/products';
 import { bundledPromotions } from '../data/promotions';
@@ -17,9 +19,11 @@ import { imageRef } from '../data/images';
 
 const TABS = [
   { id: 'products', label: 'Products', icon: Gem },
+  { id: 'home', label: 'Home page', icon: LayoutList },
   { id: 'offers', label: 'Offers', icon: Megaphone },
   { id: 'rates', label: 'Rates', icon: BadgeIndianRupee },
   { id: 'contact', label: 'Contact & timings', icon: Store },
+  { id: 'reviews', label: 'Reviews', icon: Star },
   { id: 'styling', label: 'Styling 101 reels', icon: Sparkles },
   { id: 'screen', label: 'Showroom TV', icon: Monitor },
 ];
@@ -298,9 +302,11 @@ export default function AdminApp() {
             {tab === 'products' && (
               <ProductsPanel products={content.products} setProducts={setList('products')} settings={content.settings} setSettings={setSettings} notify={notify} />
             )}
+            {tab === 'home' && <HomePanel settings={content.settings} setSettings={setSettings} notify={notify} />}
             {tab === 'offers' && <OffersPanel promotions={content.promotions} setPromotions={setList('promotions')} notify={notify} />}
             {tab === 'rates' && <RatesPanel settings={content.settings} setSettings={setSettings} notify={notify} source={session.rates} />}
             {tab === 'contact' && <ContactPanel settings={content.settings} setSettings={setSettings} notify={notify} />}
+            {tab === 'reviews' && <ReviewsPanel settings={content.settings} setSettings={setSettings} notify={notify} />}
             {tab === 'styling' && <StylingPanel settings={content.settings} setSettings={setSettings} products={content.products} notify={notify} />}
             {tab === 'screen' && (
               <AdsPanel ads={content.ads ?? []} setAds={setList('ads')} promotions={content.promotions} settings={content.settings} setSettings={setSettings} notify={notify} />

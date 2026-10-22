@@ -1,19 +1,24 @@
 import { useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Download, Plus, Printer, Trash2 } from 'lucide-react';
 import { api } from './api';
 import { Button, ErrorBanner, Field, inputClass } from './ui';
 import { cleanSettings } from '../content/schema';
+import ReviewQR from '../components/common/ReviewQR';
+import { business } from '../data/footer';
+import { downloadReviewQr, printReviewCard } from './reviewQrFiles';
 
 const card = 'rounded-xl border border-border bg-white p-5';
 const h3 = 'font-serif text-lg text-heading';
 
 export default function ContactPanel({ settings, setSettings, notify }) {
-  const [c, setC] = useState(() => structuredClone(settings.contact));
+  const [c, setC] = useState(() => ({ googleReview: '', ...structuredClone(settings.contact) }));
   const [errors, setErrors] = useState({});
   const [problem, setProblem] = useState(null);
   const [busy, setBusy] = useState(false);
 
   const set = (k) => (e) => setC((x) => ({ ...x, [k]: e.target.value }));
+  // The QR follows the link as typed, so it can be checked before saving.
+  const reviewTarget = /^https:\/\/\S+$/i.test(c.googleReview.trim()) ? c.googleReview.trim() : business.mapsUrl;
   const setAddr = (k) => (e) => setC((x) => ({ ...x, address: { ...x.address, [k]: e.target.value } }));
   const setRow = (list, i, k) => (e) => setC((x) => ({ ...x, [list]: x[list].map((r, j) => (j === i ? { ...r, [k]: e.target.value } : r)) }));
   const addRow = (list, row) => setC((x) => ({ ...x, [list]: [...x[list], row] }));
@@ -29,7 +34,7 @@ export default function ContactPanel({ settings, setSettings, notify }) {
     try {
       const saved = await api('settings', { method: 'PUT', body });
       setSettings(saved);
-      setC(structuredClone(saved.contact));
+      setC({ googleReview: '', ...structuredClone(saved.contact) });
       notify('Contact details saved');
     } catch (e) {
       setErrors(e.errors ?? {});
@@ -131,6 +136,33 @@ export default function ContactPanel({ settings, setSettings, notify }) {
           <Field label="Facebook" error={errors['contact.facebook']} hint="Leave empty to hide the icon">
             {(p) => <input {...p} type="url" className={inputClass} value={c.facebook} onChange={set('facebook')} placeholder="https://www.facebook.com/…" />}
           </Field>
+        </div>
+      </div>
+
+      <div className={card}>
+        <h3 className={h3}>Google reviews</h3>
+        <Field
+          label="Review link"
+          className="mt-3"
+          error={errors['contact.googleReview']}
+          hint="For the “Rate us on Google” buttons. In your Google Business Profile: Ask for reviews → copy the link (looks like https://g.page/r/…/review). Empty: the buttons open your shop on Google Maps."
+        >
+          {(p) => <input {...p} type="url" className={inputClass} value={c.googleReview} onChange={set('googleReview')} placeholder="https://g.page/r/…/review" />}
+        </Field>
+        <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-border pt-4">
+          <ReviewQR url={reviewTarget} className="size-28 shrink-0 rounded-md border border-border p-1" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <p className="font-sans text-[13px] text-ink">QR code for the shop counter, bills and WhatsApp status: customers scan it to rate you on Google.</p>
+            {!c.googleReview.trim() && <p className="font-sans text-[12px] text-down">Add your review link above first. Without it, the QR only opens your shop on Google Maps.</p>}
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={() => printReviewCard(reviewTarget).catch((e) => notify(e.message, 'error'))}>
+                <Printer className="size-4" /> Print counter card
+              </Button>
+              <Button variant="outline" onClick={() => downloadReviewQr(reviewTarget)}>
+                <Download className="size-4" /> Download QR (PNG)
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 

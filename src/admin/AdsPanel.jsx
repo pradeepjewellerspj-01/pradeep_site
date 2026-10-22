@@ -342,6 +342,7 @@ function ScreenBranding({ settings, setSettings, notify }) {
       <div className="grid gap-5 border-t border-border px-5 py-5 sm:grid-cols-[220px_1fr]">
         <PhotoInput
           label="Logo (optional)"
+          watermark={false}
           value={sc.logo ?? ''}
           onChange={(v) => setSc((s) => ({ ...s, logo: v || null }))}
           error={errors['screen.logo']}
