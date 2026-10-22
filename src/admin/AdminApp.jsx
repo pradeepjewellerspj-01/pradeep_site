@@ -236,8 +236,9 @@ export default function AdminApp() {
     <div className="min-h-screen bg-cream">
       <header className="sticky top-0 z-40 border-b border-border bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
-          <Logo size="sm" />
-          <span className="rounded-full bg-ink px-2.5 py-0.5 font-sans text-[10.5px] uppercase tracking-[0.18em] text-white">Admin</span>
+          <Logo size="sm" className="shrink-0" />
+          {/* Phones have no room beside the logo and the four buttons; the page title says Admin there. */}
+          <span className="hidden shrink-0 rounded-full bg-ink px-2.5 py-0.5 font-sans text-[10.5px] uppercase tracking-[0.18em] text-white sm:inline">Admin</span>
           <div className="ml-auto flex items-center gap-1">
             {/* A full page load, so the website applies the latest saved content. */}
             <a

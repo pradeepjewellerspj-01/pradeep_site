@@ -311,7 +311,7 @@ const POSITION = /^\d{1,3}% \d{1,3}%$/;
  *   hero         banners: photo, the lines of text, button and link, text colour (`tone`)
  *   categories   "Shop by Category" circles: name, link, photo
  *   collections  "Explore Our World" cards: name, small line, link, photo
- *   arrivals     the two New Arrivals photos (their titles and links stay)
+ *   arrivals     the two New Arrivals cards: name, link, photo
  * A list left out keeps the site's defaults.
  */
 export function cleanHomeContent(input) {
@@ -368,9 +368,15 @@ export function cleanHomeContent(input) {
     return item;
   });
 
+  // The two New Arrivals cards: name, link and photo (an older save holds just the photo).
   if (Array.isArray(input.arrivals)) {
-    value.arrivals = input.arrivals.slice(0, 2).map((v) => optStr(v));
-    value.arrivals.forEach((v, i) => v && !IMAGE.test(v) && (errors[`arrivals.${i}`] = 'Invalid photo'));
+    value.arrivals = input.arrivals.slice(0, 2).map((a, i) => {
+      const card = typeof a === 'string' ? { title: '', href: '', image: a } : { title: str(a?.title), href: str(a?.href), image: str(a?.image) };
+      if (card.title.length > 24) errors[`arrivals.${i}.title`] = 'Too long (max 24)';
+      if (card.href && !SITE_PATH.test(card.href)) errors[`arrivals.${i}.href`] = 'Link must be a page on this site, starting with /';
+      if (card.image && !IMAGE.test(card.image)) errors[`arrivals.${i}.image`] = 'Invalid photo';
+      return card;
+    });
   }
 
   return Object.keys(errors).length ? { errors } : { value };

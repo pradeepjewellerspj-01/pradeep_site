@@ -15,7 +15,12 @@ export function homeContentOf(settings) {
     hero: saved.hero?.length ? saved.hero : bundled.hero,
     categories: keyed(saved.categories?.length ? saved.categories : bundled.categories),
     collections: keyed(saved.collections?.length ? saved.collections : bundled.collections),
-    arrivals: bundled.arrivals.map((ref, i) => saved.arrivals?.[i] || ref),
+    // Each card's saved name, link and photo over the defaults (an older save holds just the photo).
+    arrivals: bundled.arrivals.map((card, i) => {
+      const s = saved.arrivals?.[i];
+      const custom = typeof s === 'string' ? { image: s } : (s ?? {});
+      return { title: custom.title || card.title, href: custom.href || card.href, image: custom.image || card.image };
+    }),
   };
 }
 
@@ -233,23 +238,30 @@ export default function HomeContentEditor({ value, onChange, errors, settings })
 
       <section className="rounded-xl border border-border bg-white">
         <div className="border-b border-border px-5 py-4">
-          <h3 className="font-serif text-lg text-heading">New Arrivals photos</h3>
-          <p className="font-sans text-[12.5px] text-muted">The two cards in the New Arrivals band. Only the photos change here.</p>
+          <h3 className="font-serif text-lg text-heading">New Arrivals</h3>
+          <p className="font-sans text-[12.5px] text-muted">The two cards in the New Arrivals band: name, the page each opens, and photo.</p>
         </div>
-        <div className="grid gap-4 px-5 py-4 sm:grid-cols-2">
-          {newArrivals.cards.map((card, i) => (
-            <PhotoInput
-              key={card.href}
-              label={card.title}
-              value={value.arrivals[i]}
-              onChange={(image) => set('arrivals')(value.arrivals.map((x, j) => (j === i ? image : x)))}
-              error={errors[`arrivals.${i}`]}
-              aspect="aspect-[4/3]"
-              className="max-w-[260px]"
-              watermark={false}
-              maxEdge={1400}
-            />
-          ))}
+        <div className="grid gap-6 px-5 py-4 sm:grid-cols-2">
+          {value.arrivals.map((card, i) => {
+            const patch = (p) => set('arrivals')(value.arrivals.map((x, j) => (j === i ? { ...x, ...p } : x)));
+            return (
+              <div key={i} className="space-y-3">
+                <p className="font-sans text-[11.5px] font-medium uppercase tracking-[0.12em] text-subtle">Card {i + 1}</p>
+                <TextField label="Name" value={card.title} onChange={(title) => patch({ title })} error={errors[`arrivals.${i}.title`]} placeholder={newArrivals.cards[i]?.title} />
+                <LinkPicker value={card.href} onChange={(href) => patch({ href })} options={links} error={errors[`arrivals.${i}.href`]} />
+                <PhotoInput
+                  label="Photo"
+                  value={card.image}
+                  onChange={(image) => patch({ image })}
+                  error={errors[`arrivals.${i}.image`]}
+                  aspect="aspect-[4/3]"
+                  className="max-w-[260px]"
+                  watermark={false}
+                  maxEdge={1400}
+                />
+              </div>
+            );
+          })}
         </div>
       </section>
     </div>

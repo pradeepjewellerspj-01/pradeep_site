@@ -153,7 +153,7 @@ export function bundledHomeContent(imageRef) {
     hero: withRef(BUNDLED.hero).map(({ id, image, alt, eyebrow, title, script, subtitle, cta, href, tone, position }) => ({ id, image, alt, eyebrow, title, script, subtitle, cta, href, tone, position })),
     categories: withRef(BUNDLED.categories),
     collections: withRef(BUNDLED.collections),
-    arrivals: BUNDLED.arrivals.map((c) => imageRef(c.image)),
+    arrivals: BUNDLED.arrivals.map((c) => ({ title: c.title, href: c.href, image: imageRef(c.image) })),
   };
 }
 
@@ -169,9 +169,15 @@ export function applyHomeContent(saved, resolveImage) {
   );
   replace(discoveryCategories, saved?.categories?.length ? saved.categories.map((c) => ({ ...c, image: photo(c.image) })) : BUNDLED.categories.map((c) => ({ ...c })));
   replace(discoveryCollections, saved?.collections?.length ? saved.collections.map((c) => ({ ...c, image: photo(c.image) })) : BUNDLED.collections.map((c) => ({ ...c })));
-  // New Arrivals: only the photos change; titles and links stay.
+  // New Arrivals: the two cards' name, link and photo. (Saved before names could
+  // change, an entry is just the photo.) Anything left empty keeps the default.
   replace(
     newArrivals.cards,
-    BUNDLED.arrivals.map((card, i) => ({ ...card, image: photo(saved?.arrivals?.[i]) ?? card.image })),
+    BUNDLED.arrivals.map((card, i) => {
+      const s = saved?.arrivals?.[i];
+      const custom = typeof s === 'string' ? { image: s } : (s ?? {});
+      const title = custom.title || card.title;
+      return { ...card, title, href: custom.href || card.href, image: photo(custom.image) ?? card.image, alt: custom.title ? title : card.alt };
+    }),
   );
 }
